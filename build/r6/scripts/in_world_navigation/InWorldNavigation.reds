@@ -1,5 +1,3 @@
-public static native func Cast(a: ResRef) -> FxResource;
-
 public native class InWorldNavigation extends IScriptable {
   public static native func GetInstance() -> ref<InWorldNavigation>;
 
