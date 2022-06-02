@@ -1,6 +1,6 @@
 # In-World Navigation
 
-This mod displays in-world holographic arrows for quest/point of interest navigation, mirroring the dots in the minimap.
+This mod displays in-world holographic arrows for quest/point of interest navigation, mirroring the dots in the minimap. They're currently displayed all of the time, but will eventually be configurable.
 
 ![preview](preview.jpg)
 
