@@ -5,9 +5,11 @@ public native class InWorldNavigation extends IScriptable {
   public let player: ref<GameObject>;
   let spacing: Float;
   let maxPoints: Int32;
+  let distanceToFade: Float;
 
-  let navPathQuestFX: array<ref<FxInstance>>;
-  let navPathPOIFX: array<ref<FxInstance>>;
+  let navPathFXs: array<array<ref<FxInstance>>>;
+  let navPathTransforms: array<array<WorldTransform>>;
+
   let navPathYellowResource: FxResource;
   let navPathBlueResource: FxResource;
   let navPathWhiteResource: FxResource;
@@ -21,14 +23,29 @@ public native class InWorldNavigation extends IScriptable {
   let questVariant: gamedataMappinVariant;
   let poiVariant: gamedataMappinVariant;
 
+  let distanceToAnimate: Float;
+
   public func Setup(player: ref<GameObject>) -> Void {
     this.player = player;
     this.spacing = 5.0; // meters
-    this.maxPoints = 100;
+    this.maxPoints = 200;
+    this.distanceToAnimate = 2.5;
+    this.distanceToFade = 25.0;
+    
     this.navPathYellowResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_yellow.effect");
     this.navPathBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_blue.effect");
     this.navPathWhiteResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_white.effect");
     this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
+
+    let questFx: array<ref<FxInstance>>;
+    let poiFx: array<ref<FxInstance>>;
+    ArrayPush(this.navPathFXs, questFx);
+    ArrayPush(this.navPathFXs, poiFx);
+
+    let questTransforms: array<WorldTransform>;
+    let poisTransforms: array<WorldTransform>;
+    ArrayPush(this.navPathTransforms, questTransforms);
+    ArrayPush(this.navPathTransforms, poisTransforms);
   }
 
   public func GetResourceForVariant(variant: gamedataMappinVariant) -> FxResource {
@@ -58,83 +75,133 @@ public native class InWorldNavigation extends IScriptable {
 
   public func Update(questOrPOI: Int32) {
     if IsDefined(this.mmcc) {
-      if questOrPOI == 0 {
+      // if questOrPOI == 0 {
         let questMappin = this.mmcc.GetQuestMappin();
         if IsDefined(questMappin) {
           let questVariant = questMappin.GetVariant();
           if !Equals(questVariant, this.questVariant) {
             this.questVariant = questVariant;
-            this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant));
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
           } else {
-            this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant));
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+          }
+        } else {     
+          for fx in this.navPathFXs[0] {
+            fx.BreakLoop();
           }
         }
-      } else {
+      // } else {
         let poiMappin = this.mmcc.GetPOIMappin();
         if IsDefined(poiMappin) {
           let poiVariant = poiMappin.GetVariant();
           if !Equals(poiVariant, this.poiVariant) {
             this.poiVariant = poiVariant;
-            this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant));
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
           } else {
-            this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant));
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+          }
+        } else {
+          for fx in this.navPathFXs[1] {
+            fx.BreakLoop();
           }
         }
-      }
+      // }
     }
   }
 
   public func Stop() {
-    for fx in this.navPathQuestFX {
+    for fx in this.navPathFXs[0] {
       fx.BreakLoop();
     }
-    for fx in this.navPathPOIFX {
+    for fx in this.navPathFXs[1] {
       fx.BreakLoop();
     }
   }
 
-  private func UpdateNavPath(out fxs:array<ref<FxInstance>>, points: array<Vector4>, resource: FxResource) -> Void {
-    let lastPoint: Vector4 = points[0];
-    ArrayErase(points, 0);
+  private func UpdateNavPath(type: Int32, points: array<Vector4>, resource: FxResource, force: Bool) -> Void {
+    let lastDrawnPoint: Vector4 = points[0];
     let pointDrawnCount: Int32 = 0;
 
-    for point in points {
-        if pointDrawnCount >= this.maxPoints {
-          break;
+    let i = 1;
+    while i < ArraySize(points) && pointDrawnCount < this.maxPoints {
+      let tweenPointDistance = Vector4.Distance(points[i-1], points[i]);
+      let orientation = Quaternion.BuildFromDirectionVector(points[i] - lastDrawnPoint);
+      if i == 1 {
+        let tweenPointCount = FloorF(tweenPointDistance / this.spacing);
+        let distance = AbsF(tweenPointDistance - (Cast<Float>(tweenPointCount) * this.spacing));
+        if distance >= this.spacing / 2.0 {
+          distance -= this.spacing;
         }
-
-        let tweenPointDistance = Vector4.distance(point, lastPoint);
-        let tweenPointCount = Cast<Int32>(Cast<Float>(RoundF(tweenPointDistance / this.spacing)));
-
-        if tweenPointCount >= 1 {
-            let orientation = Quaternion.BuildFromDirectionVector(point - lastPoint);
-
-            let tweenPointDrawnCount: Int32 = 0;
-            while tweenPointDrawnCount < tweenPointCount {
-                let ratio: Float = Cast<Float>(tweenPointDrawnCount)/Cast<Float>(tweenPointCount);
-                let position = Vector4.Interpolate(point, lastPoint, ratio);
-
-                this.UpdateNavPath(fxs, pointDrawnCount, position, orientation, resource);
-
-                tweenPointDrawnCount += 1;
-                pointDrawnCount += 1;
+        // let distance = 0.0;
+        while distance <= tweenPointDistance && pointDrawnCount < this.maxPoints {
+          let ratio: Float = distance / tweenPointDistance;
+          let position = Vector4.Interpolate(points[i-1], points[i], ratio);
+          this.UpdateFxInstance(type, pointDrawnCount, position, orientation, resource, force);
+          distance += this.spacing;
+          pointDrawnCount += 1;
+          lastDrawnPoint = position;
+        }
+      } else {
+        if tweenPointDistance >= this.spacing {
+          // let rounded = Cast<Float>(RoundF(tweenPointDistance / this.spacing));
+          // let tweenPointSpacing = this.spacing + (tweenPointDistance - rounded * this.spacing) / rounded;
+          let lastDrawnPointDistance = Vector4.Distance(lastDrawnPoint, points[i-1]);
+          let lastDrawnPointInLastGroup = lastDrawnPoint;
+          let distance = -lastDrawnPointDistance + this.spacing;
+          while distance <= tweenPointDistance && pointDrawnCount < this.maxPoints {
+            let ratio: Float = distance / tweenPointDistance;
+            let position = Vector4.Interpolate(points[i-1], points[i], ratio);
+            if ratio < 0.0 {
+              position = Vector4.Interpolate(lastDrawnPointInLastGroup, position, (lastDrawnPointDistance + distance) / lastDrawnPointDistance);
+              orientation = Quaternion.BuildFromDirectionVector(position - lastDrawnPoint);
             }
-            lastPoint = point;
+            distance += this.spacing;
+            this.UpdateFxInstance(type, pointDrawnCount, position, orientation, resource, force);
+            pointDrawnCount += 1;
+            lastDrawnPoint = position;
+          }
         }
+      }
+      i += 1;
+    }
+    while pointDrawnCount < this.maxPoints && pointDrawnCount < ArraySize(this.navPathFXs[type]) {   
+      this.navPathFXs[type][pointDrawnCount].SetBlackboardValue(n"alpha", 0.0);
+      this.navPathFXs[type][pointDrawnCount].BreakLoop();
+      this.navPathFXs[type][pointDrawnCount].Kill();
+      pointDrawnCount += 1;
     }
   }
 
-  private func UpdateNavPath(out fxs: array<ref<FxInstance>>, i: Int32, p: Vector4, q: Quaternion, resource: FxResource) {
-    let navPathTransform: WorldTransform;
-    WorldTransform.SetPosition(navPathTransform, p);
-    WorldTransform.SetOrientation(navPathTransform, q);
-
-    if ArraySize(fxs) <= i {
-      ArrayPush(fxs, GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffectOnGround(resource, navPathTransform));
+  private func UpdateFxInstance(type: Int32, i: Int32, p: Vector4, q: Quaternion, resource: FxResource, force: Bool) {
+    let p_new = p;
+    let q_new = q;
+    if i >= ArraySize(this.navPathTransforms[type]) {
+      let wt: WorldTransform;
+      ArrayPush(this.navPathTransforms[type], wt);
     } else {
-        fxs[i].BreakLoop();
-        fxs[i].Kill();
-        fxs[i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffectOnGround(resource, navPathTransform);
+      let p_old = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.navPathTransforms[type][i]));
+      let q_old = WorldTransform.GetOrientation(this.navPathTransforms[type][i]);
+      if Vector4.Distance(p_old, p_new) < this.distanceToAnimate {
+        p_new = Vector4.Interpolate(p_old, p, 0.1);
+        q_new = Quaternion.Slerp(q_old, q, 0.1);
       }
+    }
+    WorldTransform.SetPosition(this.navPathTransforms[type][i], p_new);
+    WorldTransform.SetOrientation(this.navPathTransforms[type][i], q_new);
+
+    if i >= ArraySize(this.navPathFXs[type]) {
+      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(resource, this.navPathTransforms[type][i]));
+    } else { 
+      if IsDefined(this.navPathFXs[type][i]) && this.navPathFXs[type][i].IsValid() && !force {
+        this.navPathFXs[type][i].UpdateTransform(this.navPathTransforms[type][i]);
+      } else {
+        if IsDefined(this.navPathFXs[type][i]) {
+          this.navPathFXs[type][i].BreakLoop();
+          this.navPathFXs[type][i].Kill();
+        }
+        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(resource, this.navPathTransforms[type][i]);
+      }
+    }
+    this.navPathFXs[type][i].SetBlackboardValue(n"alpha", MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0));
   }
 }
