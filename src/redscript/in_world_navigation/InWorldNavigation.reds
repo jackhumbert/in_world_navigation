@@ -86,40 +86,28 @@ public native class InWorldNavigation extends IScriptable {
 
   public func Update(canUpdate: Int32) {
     if IsDefined(this.mmcc) {
-      if (canUpdate & 1) == 1 {
-        let questMappin = this.mmcc.GetQuestMappin();
-        if IsDefined(questMappin) {
-          let questVariant = questMappin.GetVariant();
-          if !Equals(questVariant, this.questVariant) {
-            this.questVariant = questVariant;
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
-          } else {
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
-          }
-        } else {     
-          for fx in this.navPathFXs[0] {
-            fx.BreakLoop();
-          }
+      let questMappin = this.mmcc.GetQuestMappin();
+      if IsDefined(questMappin) {
+        let questVariant = questMappin.GetVariant();
+        if !Equals(questVariant, this.questVariant) {
+          this.questVariant = questVariant;
+          this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
+        } else {
+          this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
         }
-      } else {
+      } else {     
         for fx in this.navPathFXs[0] {
           fx.BreakLoop();
         }
       }
-      if (canUpdate & 2) == 2 {
-        let poiMappin = this.mmcc.GetPOIMappin();
-        if IsDefined(poiMappin) {
-          let poiVariant = poiMappin.GetVariant();
-          if !Equals(poiVariant, this.poiVariant) {
-            this.poiVariant = poiVariant;
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
-          } else {
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
-          }
+      let poiMappin = this.mmcc.GetPOIMappin();
+      if IsDefined(poiMappin) {
+        let poiVariant = poiMappin.GetVariant();
+        if !Equals(poiVariant, this.poiVariant) {
+          this.poiVariant = poiVariant;
+          this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
         } else {
-          for fx in this.navPathFXs[1] {
-            fx.BreakLoop();
-          }
+          this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
         }
       } else {
         for fx in this.navPathFXs[1] {

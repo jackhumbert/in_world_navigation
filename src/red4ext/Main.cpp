@@ -80,19 +80,8 @@ void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 
 
   auto rtti = RED4ext::CRTTISystem::Get();
   if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
-    int32_t canUpdate = 0;
-    if (mmcc->questMappin) {
-      if (*(uint64_t *)mmcc->questMappin.GetPtr() > 0x7FF700000000) {
-        canUpdate += 1;
-      }
-    }
-    if (mmcc->poiMappin) {
-      if (*(uint64_t *)mmcc->poiMappin.GetPtr() > 0x7FF700000000) {
-        canUpdate += 2;
-      }
-    }
     auto fnp = InWorldNavigation::GetInstance();
-    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &canUpdate);
+    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
     auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
     cls.GetFunction("Update")->Execute(&stack);
   }
@@ -104,7 +93,11 @@ void GetQuestMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
 
   if (aOut) {
     auto ms = reinterpret_cast<RED4ext::game::ui::MinimapContainerController *>(aContext);
-    *aOut = ms->questMappin;
+    if (!ms->questMappin.Expired()) {
+      *aOut = ms->questMappin.Lock();
+    } else {
+      *aOut = NULL;
+    }
   }
 }
 
@@ -114,7 +107,11 @@ void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
 
   if (aOut) {
     auto ms = reinterpret_cast<RED4ext::game::ui::MinimapContainerController *>(aContext);
-    *aOut = ms->poiMappin;
+    if (!ms->poiMappin.Expired()) {
+      *aOut = ms->poiMappin.Lock();
+    } else {
+      *aOut = NULL;
+    }
   }
 }
 
