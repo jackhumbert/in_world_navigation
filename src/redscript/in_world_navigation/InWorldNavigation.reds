@@ -14,6 +14,7 @@ public native class InWorldNavigation extends IScriptable {
   let navPathBlueResource: FxResource;
   let navPathWhiteResource: FxResource;
   let navPathTealResource: FxResource;
+  let navPathCyanResource: FxResource;
 
   let questMappin: wref<QuestMappin>;
   let poiMappin: wref<IMappin>;
@@ -36,6 +37,7 @@ public native class InWorldNavigation extends IScriptable {
     this.navPathBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_blue.effect");
     this.navPathWhiteResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_white.effect");
     this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
+    this.navPathCyanResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_cyan.effect");
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
@@ -69,9 +71,12 @@ public native class InWorldNavigation extends IScriptable {
           break;
         case gamedataMappinVariant.TarotVariant:
         case gamedataMappinVariant.FastTravelVariant:
-        case gamedataMappinVariant.GangWatchVariant: // light blue
-        case gamedataMappinVariant.HiddenStashVariant: // light blue
           return this.navPathBlueResource;
+          break; 
+        case gamedataMappinVariant.GangWatchVariant:
+        case gamedataMappinVariant.HiddenStashVariant: 
+        case gamedataMappinVariant.OutpostVariant:
+          return this.navPathCyanResource;
           break; 
         case gamedataMappinVariant.ServicePointDropPointVariant:
         case gamedataMappinVariant.CustomPositionVariant:
@@ -135,12 +140,15 @@ public native class InWorldNavigation extends IScriptable {
 
     while i > 0 {
       let tweenPointDistance = Vector4.Distance(points[i-1], lastDrawnPoint);
+      if i == 1 {
+        tweenPointDistance += this.spacing;
+      }
       if tweenPointDistance >= this.spacing {
         // let rounded = Cast<Float>(RoundF(tweenPointDistance / this.spacing));
         // let tweenPointSpacing = this.spacing + (tweenPointDistance - rounded * this.spacing) / rounded;
         let lastDrawnPointInLastGroup = lastDrawnPoint;
         let distance = this.spacing;
-        while distance < tweenPointDistance {
+        while distance <= tweenPointDistance {
           let ratio: Float = distance / tweenPointDistance;
           let position = Vector4.Interpolate(lastDrawnPointInLastGroup, points[i-1], ratio);
           let orientation = Quaternion.BuildFromDirectionVector(lastDrawnPoint - position);
