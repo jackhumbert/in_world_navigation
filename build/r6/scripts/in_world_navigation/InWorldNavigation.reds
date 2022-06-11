@@ -55,6 +55,8 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.Zzz05_ApartmentToPurchaseVariant:
         case gamedataMappinVariant.QuestGiverVariant:
         case gamedataMappinVariant.FixerVariant:
+        case gamedataMappinVariant.RetrievingVariant:
+        case gamedataMappinVariant.SabotageVariant:
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
