@@ -15,8 +15,8 @@ public native class InWorldNavigation extends IScriptable {
   let navPathWhiteResource: FxResource;
   let navPathTealResource: FxResource;
 
-  let questMappin: ref<QuestMappin>;
-  let poiMappin: ref<IMappin>;
+  let questMappin: wref<QuestMappin>;
+  let poiMappin: wref<IMappin>;
   let questResource: FxResource;
   let poiResource: FxResource;
 
@@ -119,60 +119,7 @@ public native class InWorldNavigation extends IScriptable {
   }
 
   private func UpdateNavPath(type: Int32, points: array<Vector4>, resource: FxResource, force: Bool) -> Void {
-    // let lastDrawnPoint: Vector4 = points[0];
-    // let secondLastDrawnPoint: Vector4 = points[0];
     let pointDrawnCount: Int32 = 0;
-
-    // let i = 1;
-    // while i < ArraySize(points) && pointDrawnCount < this.maxPoints {
-    //   let tweenPointDistance = Vector4.Distance(points[i-1], points[i]);
-    //   if i == 1 {
-    //     let tweenPointCount = FloorF(tweenPointDistance / this.spacing);
-    //     let distance = AbsF(tweenPointDistance - (Cast<Float>(tweenPointCount) * this.spacing));
-    //     if distance >= this.spacing / 2.0 {
-    //       distance -= this.spacing;
-    //     }
-    //     // let distance = 0.0;
-    //     while distance <= tweenPointDistance && pointDrawnCount < this.maxPoints {
-    //       let ratio: Float = distance / tweenPointDistance;
-    //       let position = Vector4.Interpolate(points[i-1], points[i], ratio);
-    //       let orientation = Quaternion.BuildFromDirectionVector(position - lastDrawnPoint);
-    //       this.UpdateFxInstance(type, pointDrawnCount, position, orientation, resource, force);
-    //       distance += this.spacing;
-    //       pointDrawnCount += 1;
-    //       lastDrawnPoint = position;
-    //     }
-    //   } else {
-    //     if tweenPointDistance >= this.spacing {
-    //       // let rounded = Cast<Float>(RoundF(tweenPointDistance / this.spacing));
-    //       // let tweenPointSpacing = this.spacing + (tweenPointDistance - rounded * this.spacing) / rounded;
-    //       let lastDrawnPointDistance = Vector4.Distance(lastDrawnPoint, points[i-1]);
-    //       let lastDrawnPointInLastGroup = lastDrawnPoint;
-    //       let distance = -lastDrawnPointDistance + this.spacing;
-    //       while distance <= tweenPointDistance && pointDrawnCount < this.maxPoints {
-    //         let ratio: Float = distance / tweenPointDistance;
-    //         let position = Vector4.Interpolate(points[i-1], points[i], ratio);
-    //         if ratio < 0.0 {
-    //           if i > 2 {
-    //             let lastDistance = Vector4.Distance(lastDrawnPoint, secondLastDrawnPoint);
-    //             let lastInterpolation = Vector4.Interpolate(secondLastDrawnPoint, lastDrawnPoint, (lastDistance + distance) / lastDistance);
-    //             position = Vector4.Interpolate(lastInterpolation, position, (lastDrawnPointDistance + distance) / lastDrawnPointDistance);
-    //           } else {
-    //             position = Vector4.Interpolate(lastDrawnPointInLastGroup, position, (lastDrawnPointDistance + distance) / lastDrawnPointDistance);
-    //           }
-    //         }
-    //         let orientation = Quaternion.BuildFromDirectionVector(position - lastDrawnPoint);
-    //         distance += this.spacing;
-    //         this.UpdateFxInstance(type, pointDrawnCount, position, orientation, resource, force);
-    //         pointDrawnCount += 1;
-    //         secondLastDrawnPoint = lastDrawnPoint;
-    //         lastDrawnPoint = position;
-    //       }
-    //     }
-    //   }
-    //   i += 1;
-    // }
-
     let dots: array<Transform>;
 
     let i = ArraySize(points) - 1;
@@ -213,7 +160,7 @@ public native class InWorldNavigation extends IScriptable {
       }
       i += 1;
     }
-    
+
     ArrayResize(this.navPathTransforms[type], ArraySize(dots));
 
     i = ArraySize(dots) - 1;

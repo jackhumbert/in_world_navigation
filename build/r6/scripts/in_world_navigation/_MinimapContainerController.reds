@@ -17,3 +17,9 @@ public native func GetPOIMappin() -> ref<IMappin>;
 
 @addField(MinimapContainerController)
 public native let poiPoints: array<Vector4>;
+
+@addField(MinimapContainerController)
+public native let hasPoiMappin: Bool;
+
+@addField(MinimapContainerController)
+public native let hasQuestMappin: Bool;
