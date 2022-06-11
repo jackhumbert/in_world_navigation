@@ -16,8 +16,6 @@ public native class InWorldNavigation extends IScriptable {
   let navPathTealResource: FxResource;
   let navPathCyanResource: FxResource;
 
-  let questMappin: wref<QuestMappin>;
-  let poiMappin: wref<IMappin>;
   let questResource: FxResource;
   let poiResource: FxResource;
 
@@ -86,9 +84,9 @@ public native class InWorldNavigation extends IScriptable {
       return this.navPathWhiteResource;
   }
 
-  public func Update(questOrPOI: Int32) {
+  public func Update(canUpdate: Int32) {
     if IsDefined(this.mmcc) {
-      // if questOrPOI == 0 {
+      if (canUpdate & 1) == 1 {
         let questMappin = this.mmcc.GetQuestMappin();
         if IsDefined(questMappin) {
           let questVariant = questMappin.GetVariant();
@@ -103,7 +101,12 @@ public native class InWorldNavigation extends IScriptable {
             fx.BreakLoop();
           }
         }
-      // } else {
+      } else {
+        for fx in this.navPathFXs[0] {
+          fx.BreakLoop();
+        }
+      }
+      if (canUpdate & 2) == 2 {
         let poiMappin = this.mmcc.GetPOIMappin();
         if IsDefined(poiMappin) {
           let poiVariant = poiMappin.GetVariant();
@@ -118,7 +121,11 @@ public native class InWorldNavigation extends IScriptable {
             fx.BreakLoop();
           }
         }
-      // }
+      } else {
+        for fx in this.navPathFXs[1] {
+          fx.BreakLoop();
+        }
+      }
     }
   }
 

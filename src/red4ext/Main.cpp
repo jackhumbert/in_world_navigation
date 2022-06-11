@@ -80,16 +80,21 @@ void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 
 
   auto rtti = RED4ext::CRTTISystem::Get();
   if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
-    if (mmcc->tier == RED4ext::GameplayTier::Tier1_FullGameplay) {
-      auto fnp = InWorldNavigation::GetInstance();
-      auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
-      auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
-      cls.GetFunction("Update")->Execute(&stack);
-    } else {
-      auto fnp = InWorldNavigation::GetInstance();
-      auto stack = RED4ext::CStack(fnp, nullptr, 0, nullptr, 0);
-      cls.GetFunction("Stop")->Execute(&stack);
+    int32_t canUpdate = 0;
+    if (mmcc->questMappin) {
+      if (*(uint64_t *)mmcc->questMappin.GetPtr() > 0x7FF700000000) {
+        canUpdate += 1;
+      }
     }
+    if (mmcc->poiMappin) {
+      if (*(uint64_t *)mmcc->poiMappin.GetPtr() > 0x7FF700000000) {
+        canUpdate += 2;
+      }
+    }
+    auto fnp = InWorldNavigation::GetInstance();
+    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &canUpdate);
+    auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
+    cls.GetFunction("Update")->Execute(&stack);
   }
 }
 
