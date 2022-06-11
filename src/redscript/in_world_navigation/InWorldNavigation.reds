@@ -60,6 +60,7 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.ClientInDistressVariant:
         case gamedataMappinVariant.ThieveryVariant:
         case gamedataMappinVariant.HuntForPsychoVariant:
+        case gamedataMappinVariant.Zzz06_NCPDGigVariant: // light green
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
@@ -68,7 +69,8 @@ public native class InWorldNavigation extends IScriptable {
           break;
         case gamedataMappinVariant.TarotVariant:
         case gamedataMappinVariant.FastTravelVariant:
-        case gamedataMappinVariant.GangWatchVariant:
+        case gamedataMappinVariant.GangWatchVariant: // light blue
+        case gamedataMappinVariant.HiddenStashVariant: // light blue
           return this.navPathBlueResource;
           break; 
         case gamedataMappinVariant.ServicePointDropPointVariant:
