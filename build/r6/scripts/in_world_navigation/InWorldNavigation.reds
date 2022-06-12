@@ -60,7 +60,8 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.ClientInDistressVariant:
         case gamedataMappinVariant.ThieveryVariant:
         case gamedataMappinVariant.HuntForPsychoVariant:
-        case gamedataMappinVariant.Zzz06_NCPDGigVariant: // light green
+        case gamedataMappinVariant.Zzz06_NCPDGigVariant:
+        case gamedataMappinVariant.BountyHuntVariant:
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
