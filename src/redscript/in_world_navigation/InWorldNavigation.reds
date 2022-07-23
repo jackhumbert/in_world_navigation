@@ -1,11 +1,45 @@
+enum InWorldNavigationMode {
+  Always = 0,
+  Driving = 1,
+  Walking = 2
+}
+
 public native class InWorldNavigation extends IScriptable {
   public static native func GetInstance() -> ref<InWorldNavigation>;
 
   public let mmcc: ref<MinimapContainerController>;
   public let player: ref<GameObject>;
-  let spacing: Float;
-  let maxPoints: Int32;
-  let distanceToFade: Float;
+  
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Enabled")
+  let enabled: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Display mode")
+  let mode: InWorldNavigationMode = InWorldNavigationMode.Driving;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow spacing")
+  @runtimeProperty("ModSettings.description", "In-game units between arrows")
+  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "20.0")
+  let spacing: Float = 5.0;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Max number of arrows")
+  @runtimeProperty("ModSettings.step", "5")
+  @runtimeProperty("ModSettings.min", "10")
+  @runtimeProperty("ModSettings.max", "2000")
+  let maxPoints: Int32 = 200;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Distance within arrows will fade")
+  @runtimeProperty("ModSettings.description", "Measures from player")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  let distanceToFade: Float = 25.0;
 
   let navPathFXs: array<array<ref<FxInstance>>>;
   let navPathTransforms: array<array<Transform>>;
@@ -26,10 +60,7 @@ public native class InWorldNavigation extends IScriptable {
 
   public func Setup(player: ref<GameObject>) -> Void {
     this.player = player;
-    this.spacing = 5.0; // meters
-    this.maxPoints = 200;
     this.distanceToAnimate = 50.0;
-    this.distanceToFade = 25.0;
     
     this.navPathYellowResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_yellow.effect");
     this.navPathBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_blue.effect");
@@ -46,6 +77,7 @@ public native class InWorldNavigation extends IScriptable {
     let poisTransforms: array<Transform>;
     ArrayPush(this.navPathTransforms, questTransforms);
     ArrayPush(this.navPathTransforms, poisTransforms);
+    ModSettings.RegisterListenerToClass(this);
   }
 
   public func GetResourceForVariant(variant: gamedataMappinVariant) -> FxResource {
@@ -87,33 +119,41 @@ public native class InWorldNavigation extends IScriptable {
 
   public func Update(canUpdate: Int32) {
     if IsDefined(this.mmcc) {
-      let questMappin = this.mmcc.GetQuestMappin();
-      if IsDefined(questMappin) {
-        let questVariant = questMappin.GetVariant();
-        if !Equals(questVariant, this.questVariant) {
-          this.questVariant = questVariant;
-          this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
-        } else {
-          this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+      let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
+      if this.enabled && 
+        ((isMounted && NotEquals(this.mode, InWorldNavigationMode.Walking)) ||
+         (!isMounted && NotEquals(this.mode, InWorldNavigationMode.Driving))
+        ) { 
+        let questMappin = this.mmcc.GetQuestMappin();
+        if IsDefined(questMappin) {
+          let questVariant = questMappin.GetVariant();
+          if !Equals(questVariant, this.questVariant) {
+            this.questVariant = questVariant;
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
+          } else {
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+          }
+        } else {     
+          for fx in this.navPathFXs[0] {
+            fx.BreakLoop();
+          }
         }
-      } else {     
-        for fx in this.navPathFXs[0] {
-          fx.BreakLoop();
-        }
-      }
-      let poiMappin = this.mmcc.GetPOIMappin();
-      if IsDefined(poiMappin) {
-        let poiVariant = poiMappin.GetVariant();
-        if !Equals(poiVariant, this.poiVariant) {
-          this.poiVariant = poiVariant;
-          this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
+        let poiMappin = this.mmcc.GetPOIMappin();
+        if IsDefined(poiMappin) {
+          let poiVariant = poiMappin.GetVariant();
+          if !Equals(poiVariant, this.poiVariant) {
+            this.poiVariant = poiVariant;
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
+          } else {
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+          }
         } else {
-          this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+          for fx in this.navPathFXs[1] {
+            fx.BreakLoop();
+          }
         }
       } else {
-        for fx in this.navPathFXs[1] {
-          fx.BreakLoop();
-        }
+        this.Stop();
       }
     }
   }
@@ -127,12 +167,21 @@ public native class InWorldNavigation extends IScriptable {
     }
   }
 
+  let timer: Float;
+
   private func UpdateNavPath(type: Int32, points: array<Vector4>, resource: FxResource, force: Bool) -> Void {
     let pointDrawnCount: Int32 = 0;
     let dots: array<Transform>;
-
     let i = ArraySize(points) - 1;
     let lastDrawnPoint: Vector4 = points[i];
+
+    // let firstDistance = Vector4.Distance( points[i],points[i-1]);
+    // let lastDrawnPoint: Vector4 = Vector4.Interpolate(points[i], points[i-1], this.timer / firstDistance);
+    // this.timer += 0.01;
+    // if this.timer > this.spacing {
+    //   this.timer -= this.spacing;
+    //   ArrayRemove(this.navPathFXs[type], this.navPathFXs[type][0]);
+    // }
 
     while i > 0 {
       let tweenPointDistance = Vector4.Distance(points[i-1], lastDrawnPoint);

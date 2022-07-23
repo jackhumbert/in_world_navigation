@@ -20,14 +20,16 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   RED4ext::GetParameter(aFrame, &value);
   aFrame->code++; // skip ParamEnd
 
-  auto resHandle = new RED4ext::ResourceHandle<RED4ext::world::Effect>();
-  if (value.resource.ref != 0) {
-    RED4ext::CName fc = value.resource.ref;
-    LoadResRef<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
-  }
+  // auto resHandle = new RED4ext::ResourceHandle<RED4ext::world::Effect>();
+  // if (value.resource.path.hash != 0) {
+  // RED4ext::CName fc = value.resource.path.hash;
+  // value.resource.Resolve();
+  // LoadResRef<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
+  //}
 
   if (aOut) {
-    *aOut = *(RED4ext::game::FxResource *)&value.resource;
+    aOut->effect.path = value.resource.path;
+    // aOut->effect.Resolve();
   }
 }
 
@@ -69,7 +71,8 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 }
 
 // 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
-constexpr uintptr_t UpdateNavPathAddr = 0x140000C00 + 0x255D180 - RED4ext::Addresses::ImageBase;
+constexpr uintptr_t UpdateNavPathAddr = 0x0255DD80;
+
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
                    RED4ext::ink::WidgetReference *);
 decltype(&UpdateNavPath) UpdateNavPath_Original;
