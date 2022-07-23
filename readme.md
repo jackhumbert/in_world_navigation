@@ -14,6 +14,7 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 * [RED4ext](https://github.com/WopsS/RED4ext)
 * [Redscript](https://github.com/jac3km4/redscript)
+* [Mod Settings](https://github.com/jackhumbert/mod_settings)
 
 ## Bugs
 
