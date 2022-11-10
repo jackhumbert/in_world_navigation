@@ -207,7 +207,6 @@ public native class InWorldNavigation extends IScriptable {
     }
 
     i = 0;
-
     while i < ArraySize(dots) {
       if ArraySize(this.navPathTransforms[type]) <= i {
         ArrayPush(this.navPathTransforms[type], dots[i]);
