@@ -13,6 +13,7 @@
 #include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
+#include "Addresses.hpp"
 
 void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                             RED4ext::game::FxResource *aOut, int64_t a4) {
@@ -70,13 +71,11 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   }
 }
 
-// 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
 // 1.6  RVA: 0x259E440
 // 1.61 RVA: 0x259F3C0
 // 1.61hf RVA: 0x259FAF0
 // 1.62 RVA: 0x25B1920
-constexpr uintptr_t UpdateNavPathAddr = 0x25B1920;
-
+/// @pattern 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
                    RED4ext::ink::WidgetReference *);
 decltype(&UpdateNavPath) UpdateNavPath_Original;
@@ -173,7 +172,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPathAddr), &UpdateNavPath,
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), &UpdateNavPath,
                           reinterpret_cast<void **>(&UpdateNavPath_Original));
 
     break;
@@ -183,7 +182,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     spdlog::info("[RED4ext] Shutting down");
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPathAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr));
     spdlog::shutdown();
     break;
   }
