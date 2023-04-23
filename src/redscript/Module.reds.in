@@ -1,0 +1,9 @@
+module InWorldNavigation
+
+public func GetVersionString() -> String {
+  return "@MOD_VERSION_STR@";
+}
+
+public func GetVersion() -> Int32 {
+  return @MOD_VERSION_MAJOR@ * 10000 + @MOD_VERSION_MINOR@ * 100 + @MOD_VERSION_PATCH@;
+}

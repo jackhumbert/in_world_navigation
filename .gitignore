@@ -16,7 +16,7 @@
 # Mono auto generated files
 mono_crash.*
 
-.build
+build
 
 # Build results
 # [Dd]ebug/
@@ -36,13 +36,10 @@ mono_crash.*
 
 src/red4ext/x64/
 src/red4ext/build/
-packed/
-packed*.zip
-build*.zip
+*.zip
 resources/in_world_navigation.zip
 resources/install_log.xml
-deps/*
-prereqs.redscripts
+# deps/*
 
 Cyberpunk2077.exe*
 REDEngineErrorReporter.exe*
@@ -375,6 +372,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-
-red4ext/deps/*
-*.zip

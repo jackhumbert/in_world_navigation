@@ -1,3 +1,12 @@
+// In-World Navigation v0.0.8
+// Copyright (c) 2023 Jack Humbert. All rights reserved.
+// Licensed under the MIT license. See the license.md in the root project for details.
+// https://github.com/jackhumbert/in_world_navigation
+
+// This file was automatically generated on 2023-04-23 14:30:09 UTC
+
+// in_world_navigation/InWorldNavigation.reds
+
 enum InWorldNavigationMode {
   Always = 0,
   Driving = 1,
@@ -262,3 +271,39 @@ public native class InWorldNavigation extends IScriptable {
     this.navPathFXs[type][i].SetBlackboardValue(n"alpha", MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0));
   }
 }
+
+// in_world_navigation/OperatorHelpers.reds
+
+// FxResource
+
+public static native func Cast(a: ResRef) -> FxResource;
+
+
+// in_world_navigation/_MinimapContainerController.reds
+
+@wrapMethod(MinimapContainerController)
+protected final func InitializePlayer(playerPuppet: ref<GameObject>) -> Void {
+  wrappedMethod(playerPuppet);
+  let iwn = InWorldNavigation.GetInstance();
+  iwn.Setup(playerPuppet);
+  iwn.mmcc = this;
+}
+
+@addMethod(MinimapContainerController)
+public native func GetQuestMappin() -> ref<QuestMappin>;
+
+@addField(MinimapContainerController)
+public native let questPoints: array<Vector4>;
+
+@addMethod(MinimapContainerController)
+public native func GetPOIMappin() -> ref<IMappin>;
+
+@addField(MinimapContainerController)
+public native let poiPoints: array<Vector4>;
+
+@addField(MinimapContainerController)
+public native let hasPoiMappin: Bool;
+
+@addField(MinimapContainerController)
+public native let hasQuestMappin: Bool;
+

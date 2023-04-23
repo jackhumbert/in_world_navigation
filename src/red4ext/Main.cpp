@@ -6,14 +6,24 @@
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
-#include <RED4ext/Scripting/Natives/Generated/game/mappins/QuestMappin.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/mappins/PointOfInterestMappin.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/mappins/QuestMappin.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/ui/MinimapContainerController.hpp>
 
+
+#include "Addresses.hpp"
 #include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
-#include "Addresses.hpp"
+
+
+// 1.6  RVA: 0x259E440
+// 1.61 RVA: 0x259F3C0
+// 1.61hf RVA: 0x259FAF0
+// 1.62 RVA: 0x25B1920
+/// @pattern 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
+void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
+                   RED4ext::ink::WidgetReference *);
 
 void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                             RED4ext::game::FxResource *aOut, int64_t a4) {
@@ -71,13 +81,6 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   }
 }
 
-// 1.6  RVA: 0x259E440
-// 1.61 RVA: 0x259F3C0
-// 1.61hf RVA: 0x259FAF0
-// 1.62 RVA: 0x25B1920
-/// @pattern 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
-void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
-                   RED4ext::ink::WidgetReference *);
 decltype(&UpdateNavPath) UpdateNavPath_Original;
 
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
@@ -108,7 +111,7 @@ void GetQuestMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
 }
 
 void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                    RED4ext::Handle<RED4ext::game::mappins::IMappin> *aOut, int64_t a4) {
+                  RED4ext::Handle<RED4ext::game::mappins::IMappin> *aOut, int64_t a4) {
   aFrame->code++; // skip ParamEnd
 
   if (aOut) {
@@ -156,7 +159,6 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   auto f =
       RED4ext::CGlobalFunction::Create("Cast;ResRef;FxResource", "Cast;ResRef;FxResource", &CastResRefToFxResource);
   rtti->RegisterFunction(f);
-
 }
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
@@ -168,7 +170,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("[RED4ext] Starting up In-World Navigation v0.0.7");
+    spdlog::info("[RED4ext] Starting up In-World Navigation" MOD_VERSION_STR);
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
@@ -194,7 +196,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"In-World Navigation";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 7);
+  aInfo->version = RED4EXT_SEMVER(MOD_VERSION_MAJOR, MOD_VERSION_MINOR, MOD_VERSION_PATCH);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }

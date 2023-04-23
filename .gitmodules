@@ -7,3 +7,7 @@
 [submodule "deps/red4ext.sdk"]
 	path = deps/red4ext.sdk
 	url = git@github.com:jackhumbert/RED4ext.SDK.git
+	branch = new-types
+[submodule "deps/cpcmake"]
+	path = deps/cpcmake
+	url = git@github.com:jackhumbert/cpcmake.git
