@@ -1,7 +1,7 @@
 add_library(Detours STATIC)
 set_target_properties(Detours PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/deps/detours")
-set_target_properties(Detours PROPERTIES FOLDER "Dependencies")
+set_target_properties(Detours PROPERTIES FOLDER "Red4ext/Dependencies")
 
 set(DETOURS_SRC_DIR "${PROJECT_SOURCE_DIR}/deps/detours/src")
 file(GLOB_RECURSE HEADER_FILES ${DETOURS_SRC_DIR}/*.h)

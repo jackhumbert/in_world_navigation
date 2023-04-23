@@ -7,7 +7,7 @@ option(SPDLOG_WCHAR_FILENAMES "" ON)
 option(SPDLOG_WCHAR_SUPPORT "" ON)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/spdlog)
-set_target_properties(spdlog PROPERTIES FOLDER "Dependencies")
+set_target_properties(spdlog PROPERTIES FOLDER "Red4ext/Dependencies")
 
 target_compile_definitions(spdlog PUBLIC
   # https://github.com/microsoft/STL/issues/1934
