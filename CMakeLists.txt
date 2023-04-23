@@ -73,3 +73,4 @@ target_link_libraries(${MOD_SLUG}.dll
 include(Redscript)
 include(Archives)
 include(Release)
+include(Install)

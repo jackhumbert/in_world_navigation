@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/in_world_navigation
 
-// This file was automatically generated on 2023-04-23 20:21:05 UTC
+// This file was automatically generated on 2023-04-23 20:49:01 UTC
 
 // in_world_navigation/InWorldNavigation.reds
 
