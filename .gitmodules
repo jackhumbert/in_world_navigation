@@ -11,3 +11,6 @@
 [submodule "deps/cpcmake"]
 	path = deps/cpcmake
 	url = git@github.com:jackhumbert/cpcmake.git
+[submodule "deps/mod_settings"]
+	path = deps/mod_settings
+	url = git@github.com:jackhumbert/mod_settings.git
