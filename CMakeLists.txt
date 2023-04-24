@@ -52,23 +52,8 @@ find_package(RED4ext.SDK)
 find_package(Spdlog)
 find_package(ModSettings)
 
-if(PROJECT_IS_TOP_LEVEL)
-  set(FOLDER_PREFIX)
-else()
-  set(FOLDER_PREFIX "${MOD_NAME}/")
-endif()
-
-add_custom_target(${MOD_SLUG})
-set_target_properties(${MOD_SLUG} PROPERTIES FOLDER "${FOLDER_PREFIX}")
-
+include(CyberpunkMod)
 add_subdirectory(src/red4ext)
-
-target_link_libraries(${MOD_SLUG}.dll
-  PUBLIC
-    Detours
-    RED4ext.SDK
-    spdlog
-)
 
 include(Redscript)
 include(Archives)

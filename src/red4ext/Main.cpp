@@ -197,7 +197,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"In-World Navigation";
   aInfo->author = L"Jack Humbert";
   aInfo->version = RED4EXT_SEMVER(MOD_VERSION_MAJOR, MOD_VERSION_MINOR, MOD_VERSION_PATCH);
-  aInfo->runtime = RED4EXT_RUNTIME_LATEST;
+  aInfo->runtime = RED4EXT_V0_FILEVER(GAME_VERSION_MAJOR, GAME_VERSION_MINOR, GAME_VERSION_BUILD, GAME_VERSION_PRIVATE);
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
 
