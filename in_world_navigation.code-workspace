@@ -87,6 +87,6 @@
 			"xutility": "cpp"
 		},
 		"editor.tabSize": 2,
-		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\in_world_navigation\\prereqs.redscripts"
+		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\in_world_navigation\\build\\dependencies.redscripts"
 	}
 }
