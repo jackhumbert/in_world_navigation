@@ -1,9 +1,8 @@
 // In-World Navigation v0.0.8
-// Copyright (c) 2023 Jack Humbert. All rights reserved.
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/in_world_navigation
 
-// This file was automatically generated on 2023-04-24 17:48:09 UTC
+// This file was automatically generated on 2023-04-25 20:46:50 UTC
 
 // in_world_navigation/InWorldNavigation.reds
 
