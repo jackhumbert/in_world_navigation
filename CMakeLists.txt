@@ -26,7 +26,7 @@ find_package(ModSettings)
 
 # add_subdirectory(src/red4ext)
 configure_red4ext(src/red4ext)
-configure_zoltan("${MOD_SOURCE_DIR}/src/red4ext/Main.cpp" "${MOD_SOURCE_DIR}/src/red4ext/Addresses.hpp")
+configure_zoltan(Main.cpp Addresses.hpp)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
