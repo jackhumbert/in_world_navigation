@@ -34,8 +34,7 @@ build
 # [Ll]og/
 # [Ll]ogs/
 
-src/red4ext/x64/
-src/red4ext/build/
+game_dir/
 *.zip
 resources/in_world_navigation.zip
 resources/install_log.xml
