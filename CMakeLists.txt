@@ -26,7 +26,7 @@ find_package(ModSettings)
 
 # add_subdirectory(src/red4ext)
 configure_red4ext(src/red4ext)
-configure_zoltan(Main.cpp Addresses.hpp)
+configure_red4ext_addresses(Main.cpp Addresses.hpp)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
@@ -36,5 +36,8 @@ target_link_libraries(${MOD_SLUG}.dll
 
 configure_redscript(src/redscript)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
+configure_folder_file(readme.md)
+configure_folder_file(license.md)
+configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
