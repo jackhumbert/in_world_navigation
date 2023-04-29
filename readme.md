@@ -6,9 +6,7 @@ This mod displays in-world holographic arrows for quest/point of interest naviga
 
 ## Installation
 
-[Get the latest release here](https://github.com/jackhumbert/in_world_navigation/releases) - `packed-v*.zip` in the release contains all of the requirements listed below at their most up-to-date versions (at the time of release). Simply extract it and copy the contents in your game's installation folder. If you're upgrading, you may want to delete the contents of the `r6/scripts/in_world_navigation` folder, since files may have been renamed/removed.
-
-If you want to install the mod outside of a release (not recommended), the `build/` folder in the repo contains all of the mod-specific files that you can drag into your game's installation folder.
+[Get the latest release here](https://github.com/jackhumbert/in_world_navigation/releases), or [grab the latest CI build here (developers only)](https://github.com/jackhumbert/in_world_navigation/actions). If you're upgrading, you may want to delete the `r6/scripts/in_world_navigation` folder, since files may have been renamed/removed.
 
 ## Requirements
 
