@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/cyberpunk_cmake")
 
 include(CyberpunkMod)
 
-project(in_world_navigation VERSION 0.0.8)
+project(in_world_navigation VERSION 0.1.0)
 
 configure_mod(
   NAME "In-World Navigation"
@@ -33,7 +33,7 @@ target_link_libraries(${MOD_SLUG}.dll
     Detours
     spdlog
 )
-
+set(REDSCRIPT_PACK_INTO_RED4EXT ON)
 configure_redscript(src/redscript)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
 configure_folder_file(readme.md)

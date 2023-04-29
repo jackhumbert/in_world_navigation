@@ -4,6 +4,9 @@
 #define ZOLTAN_EXPAND_THEN_STRINGISE(N) ZOLTAN_STRINGISE(N)
 #define __LINE_STR__ ZOLTAN_EXPAND_THEN_STRINGISE(__LINE__)
 
+#ifndef ExecuteCommand_Addr
+#define ExecuteCommand_Addr 0x2C23D70
+#endif
 #ifndef LoadResRefAddr_Addr
 #define LoadResRefAddr_Addr 0x20E8C0
 #endif

@@ -25,6 +25,64 @@
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
                    RED4ext::ink::WidgetReference *);
 
+struct StringThing {
+  uint32_t length;
+  uint32_t unk;
+  wchar_t* str;
+};
+
+// 1.6  RVA: 0x2BE75E0 / 46036448
+// 1.62hf1  RVA: 0x2C23D70 / 46284144
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 40 48 8B FA 48 8B F1 48 8D 54 24 30 49 8B C9 49 8B D8
+__int64 __fastcall ExecuteCommand(void *scriptCompilation, RED4ext::CString * command, StringThing * args, RED4ext::CString * currentDirectory, char a5);
+decltype(&ExecuteCommand) ExecuteCommand_Original;
+
+__int64 __fastcall ExecuteCommand(void *scriptCompilation, RED4ext::CString * command, StringThing * args, RED4ext::CString * currentDirectory, char a5) {
+      
+  spdlog::info("command: {}", command->c_str());
+  spdlog::info("argsLength: {}, {}, args:", args->length, args->unk);
+  // wcstombs_s(nullptr, dest, args->str, 0x1000);
+  spdlog::info(L"{}", args->str);
+  spdlog::info("currentDirectory: {}", currentDirectory->c_str());
+
+  // strcat_s(dest, R"( -compile "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\red4ext\plugins\let_there_be_flight\")");
+  // args->length = strlen(dest);
+  // args->unk = strlen(dest);
+  // mbstowcs(args->str, dest, 0x1000);
+
+  // spdlog::info("argsLength: {}, {}, args:", args->length, args->unk);
+  // wcstombs_s(nullptr, dest, args->str, 0x1000);
+  // spdlog::info("{}", dest);
+
+  spdlog::info("Updating compile command");
+  wchar_t * original = args->str;
+  wchar_t buffer[0x1000] = {0};
+  wcscpy_s(buffer, args->str);
+  auto paths = {
+    Utils::GetRootDir() / "red4ext" / "plugins" / "in_world_navigation" / "packed.reds",
+    Utils::GetRootDir() / "red4ext" / "plugins" / "in_world_navigation" / "module.reds"
+  };
+  for (auto& path : paths)
+  {
+    spdlog::info(L"Adding path: {}", path.wstring().c_str());
+    wsprintf(buffer, L"%s -compile \"%s\"", buffer, path.wstring().c_str());
+  }
+  args->str = buffer;
+  args->unk = args->length = wcslen(buffer);
+  
+  spdlog::info("argsLength: {}, {}, args:", args->length, args->unk);
+  spdlog::info(L"{}", args->str);
+
+  auto result = ExecuteCommand_Original(scriptCompilation, command, args, currentDirectory, a5);
+
+  args->str = original;
+  args->unk = args->length = wcslen(original);
+
+  // __debugbreak();
+  return result;
+}
+
+
 void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                             RED4ext::game::FxResource *aOut, int64_t a4) {
   RED4ext::red::ResourceReferenceScriptToken value;
@@ -170,12 +228,12 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("[RED4ext] Starting up In-World Navigation" MOD_VERSION_STR);
+    spdlog::info("[RED4ext] Starting up In-World Navigation " MOD_VERSION_STR);
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), &UpdateNavPath,
-                          reinterpret_cast<void **>(&UpdateNavPath_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), &UpdateNavPath, reinterpret_cast<void **>(&UpdateNavPath_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ExecuteCommand_Addr), &ExecuteCommand, reinterpret_cast<void **>(&ExecuteCommand_Original));
 
     break;
   }
@@ -185,6 +243,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     spdlog::info("[RED4ext] Shutting down");
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ExecuteCommand_Addr));
     spdlog::shutdown();
     break;
   }
