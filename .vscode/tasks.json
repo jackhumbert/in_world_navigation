@@ -27,15 +27,20 @@
         "group": "build",
         "problemMatcher": [],
         "dependsOn": [
-          "Install"
+          "Install Mod"
         ]
       },
       {
-        "type": "cmake",
-        "label": "Install",
-        "command": "install",
+        "label": "Install Mod",
+        "command": "${command:cmake.install}",
         "problemMatcher": [],
         "detail": "Install Mod to the Cyberpunk 2077 Game Directory"
+      },
+      {
+        "label": "Build Mod",
+        "command": "${command:cmake.build}",
+        "problemMatcher": [],
+        "detail": "Build the entire mod"
       }
     ]
   }

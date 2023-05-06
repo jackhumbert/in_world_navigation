@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/cyberpunk_cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
 include(CyberpunkMod)
 
@@ -19,14 +20,12 @@ find_program(ZOLTAN_CLANG_EXE NAMES zoltan-clang.exe PATHS "${MOD_TOOLS_DIR}" CA
 find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
 
-find_package(Detours)
-# find_package(RED4ext.SDK)
-find_package(Spdlog)
-find_package(ModSettings)
-
-# add_subdirectory(src/red4ext)
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Main.cpp Addresses.hpp)
+
+find_package(Detours)
+find_package(Spdlog)
+find_package(ModSettings)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
