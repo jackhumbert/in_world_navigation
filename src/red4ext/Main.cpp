@@ -15,7 +15,7 @@
 #include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
-
+#include <ArchiveXL.hpp>
 
 // 1.6  RVA: 0x259E440
 // 1.61 RVA: 0x259F3C0
@@ -175,6 +175,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
+    ArchiveXL::RegisterArchive(aHandle, "in_world_navigation.archive");
     aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), &UpdateNavPath, reinterpret_cast<void **>(&UpdateNavPath_Original));
 
     break;

@@ -35,7 +35,9 @@ build
 # [Ll]ogs/
 
 game_dir/
-game_dir_prereqs/
+game_dir_requirements/
+game_dir_debug/
+game_dir_requirements_debug/
 *.zip
 resources/in_world_navigation.zip
 resources/install_log.xml

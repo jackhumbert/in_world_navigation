@@ -14,3 +14,6 @@
 [submodule "deps/mod_settings"]
 	path = deps/mod_settings
 	url = git@github.com:jackhumbert/mod_settings.git
+[submodule "deps/archive_xl"]
+	path = deps/archive_xl
+	url = https://github.com/psiberx/cp2077-archive-xl.git

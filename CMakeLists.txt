@@ -16,6 +16,9 @@ configure_mod(
   LICENSE "Licensed under the MIT license. See the license.md in the root project for details."
 )
 
+set(LOAD_ARCHIVES_FROM_RED4EXT ON)
+set(LOAD_REDSCRIPT_FROM_RED4EXT ON)
+
 find_program(ZOLTAN_CLANG_EXE NAMES zoltan-clang.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
 find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
@@ -25,15 +28,17 @@ configure_red4ext_addresses(Main.cpp Addresses.hpp)
 
 find_package(Detours)
 find_package(Spdlog)
+find_package(ArchiveXL)
 find_package(ModSettings)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
     Detours
     spdlog
+    ArchiveXL
 )
-set(REDSCRIPT_PACK_INTO_RED4EXT ON)
 configure_redscript(src/redscript)
+target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
