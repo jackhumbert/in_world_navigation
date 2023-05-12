@@ -170,7 +170,18 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("[RED4ext] Starting up In-World Navigation " MOD_VERSION_STR);
+    spdlog::info("Starting up In-World Navigation " MOD_VERSION_STR);
+
+    auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "in_world_navigation";
+    if (std::filesystem::exists(scriptsFolder)) {
+      spdlog::info("Deleting old scripts folder");
+      std::filesystem::remove_all(scriptsFolder);
+    }
+    auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "in_world_navigation.archive";
+    if (std::filesystem::exists(archive)) {
+      spdlog::info("Deleting old archive");
+      std::filesystem::remove_all(archive);
+    }
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     aSdk->scripts->Add(aHandle, L"packed.reds");
@@ -184,7 +195,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
 
-    spdlog::info("[RED4ext] Shutting down");
+    spdlog::info("Shutting down");
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr));
     spdlog::shutdown();
     break;
