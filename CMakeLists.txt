@@ -6,7 +6,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
 include(CyberpunkMod)
 
-project(in_world_navigation VERSION 0.1.0)
+include(ConfigureVersionFromGit)
+configure_version_from_git()
+
+project(in_world_navigation VERSION ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}.${GIT_VERSION_PATCH} LANGUAGES NONE)
 
 configure_mod(
   NAME "In-World Navigation"
@@ -44,6 +47,6 @@ target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
-# configure_uninstall()
+configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
