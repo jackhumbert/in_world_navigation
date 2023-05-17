@@ -30,18 +30,20 @@ find_package(Detours)
 find_package(Spdlog)
 find_package(ArchiveXL)
 find_package(ModSettings)
+find_package(RedLib)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
     Detours
     spdlog
     ArchiveXL
+    RedLib
 )
 configure_redscript(src/redscript)
 target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
-configure_uninstall()
+# configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()

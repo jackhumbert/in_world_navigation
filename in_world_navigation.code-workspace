@@ -5,6 +5,7 @@
 		}
 	],
 	"settings": {
+    "window.title": "In-World Navigation",
 		"files.associations": {
 			"algorithm": "cpp",
 			"array": "cpp",
@@ -87,7 +88,7 @@
 			"xutility": "cpp"
 		},
 		"editor.tabSize": 2,
-		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\in_world_navigation\\build\\dependencies.redscripts",
+		"redscript.scriptCachePath": "",
 		"cmake.generator": "Ninja"
 	}
 }

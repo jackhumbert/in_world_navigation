@@ -10,12 +10,13 @@
 #include <RED4ext/Scripting/Natives/Generated/game/mappins/QuestMappin.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/ui/MinimapContainerController.hpp>
 
-
 #include "Addresses.hpp"
 #include "LoadResRef.hpp"
+#include <ArchiveXL.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
-#include <ArchiveXL.hpp>
+#include <RedLib.hpp>
+#include "InWorldNavigation.hpp"
 
 // 1.6  RVA: 0x259E440
 // 1.61 RVA: 0x259F3C0
@@ -44,43 +45,6 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 }
 
-struct InWorldNavigation : RED4ext::IScriptable {
-  RED4ext::CClass *GetNativeType();
-  static InWorldNavigation *GetInstance();
-};
-
-RED4ext::TTypedClass<InWorldNavigation> cls("InWorldNavigation");
-
-RED4ext::CClass *InWorldNavigation::GetNativeType() { return &cls; }
-
-RED4ext::Handle<InWorldNavigation> handle;
-
-InWorldNavigation *InWorldNavigation::GetInstance() {
-  if (!handle.instance) {
-    spdlog::info("[RED4ext] New InWorldNavigation Instance");
-    auto instance = reinterpret_cast<InWorldNavigation *>(cls.CreateInstance());
-    handle = RED4ext::Handle<InWorldNavigation>(instance);
-  }
-
-  return (InWorldNavigation *)handle.instance;
-}
-
-void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                        RED4ext::Handle<InWorldNavigation> *aOut, int64_t a4) {
-  aFrame->code++;
-
-  if (!handle.instance) {
-    spdlog::info("[RED4ext] New InWorldNavigation Instance");
-    auto instance = reinterpret_cast<InWorldNavigation *>(cls.CreateInstance());
-    handle = RED4ext::Handle<InWorldNavigation>(instance);
-  }
-
-  if (aOut) {
-    handle.refCount->IncRef();
-    *aOut = RED4ext::Handle<InWorldNavigation>(handle);
-  }
-}
-
 decltype(&UpdateNavPath) UpdateNavPath_Original;
 
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
@@ -92,7 +56,7 @@ void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 
     auto fnp = InWorldNavigation::GetInstance();
     auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
     auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
-    cls.GetFunction("Update")->Execute(&stack);
+    rtti->GetClass("InWorldNavigation")->GetFunction("Update")->Execute(&stack);
   }
 }
 
@@ -124,23 +88,15 @@ void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
   }
 }
 
+
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
-  spdlog::info("Registering classes & types");
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto scriptable = rtti->GetClass("IScriptable");
-  cls.parent = scriptable;
-  cls.flags = {.isNative = true};
-  RED4ext::CRTTISystem::Get()->RegisterType(&cls);
+
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   spdlog::info("Registering members & functions");
 
   auto rtti = RED4ext::CRTTISystem::Get();
-
-  auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
-                                                           {.isNative = true, .isStatic = true});
-  cls.RegisterFunction(getInstance);
 
   // expose the minimap members to the scripts
   auto ms = rtti->GetClass("gameuiMinimapContainerController");
@@ -184,10 +140,14 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     }
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
+    Red::TypeInfoRegistrar::RegisterDiscovered();
+
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     ArchiveXL::RegisterArchive(aHandle, "in_world_navigation.archive");
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), &UpdateNavPath, reinterpret_cast<void **>(&UpdateNavPath_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), reinterpret_cast<void *>(&UpdateNavPath),
+                          reinterpret_cast<void **>(&UpdateNavPath_Original));
+
 
     break;
   }
