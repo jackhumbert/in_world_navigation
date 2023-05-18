@@ -17,6 +17,7 @@
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RedLib.hpp>
 #include "InWorldNavigation.hpp"
+#include <CyberpunkMod.hpp>
 
 // 1.6  RVA: 0x259E440
 // 1.61 RVA: 0x259F3C0
@@ -53,10 +54,15 @@ void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 
 
   auto rtti = RED4ext::CRTTISystem::Get();
   if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
+    auto profiler = CyberpunkMod::Profiler("UpdateNavPath", 5);
     auto fnp = InWorldNavigation::GetInstance();
     auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
     auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
     rtti->GetClass("InWorldNavigation")->GetFunction("Update")->Execute(&stack);
+    auto avg = profiler.End();
+    if (avg) {
+      spdlog::info("Average InWorldNavigation loop time: {}", avg);
+    }
   }
 }
 
