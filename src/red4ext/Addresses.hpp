@@ -5,8 +5,8 @@
 #define __LINE_STR__ ZOLTAN_EXPAND_THEN_STRINGISE(__LINE__)
 
 #ifndef LoadResRefAddr_Addr
-#define LoadResRefAddr_Addr 0x20E8C0
+#define LoadResRefAddr_Addr 0x20EAE0
 #endif
 #ifndef UpdateNavPath_Addr
-#define UpdateNavPath_Addr 0x25B1AC0
+#define UpdateNavPath_Addr 0x25B6A70
 #endif

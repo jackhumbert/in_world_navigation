@@ -16,16 +16,10 @@
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RedLib.hpp>
+#include <Registrar.hpp>
 #include "InWorldNavigation.hpp"
 #include <CyberpunkMod.hpp>
 
-// 1.6  RVA: 0x259E440
-// 1.61 RVA: 0x259F3C0
-// 1.61hf RVA: 0x259FAF0
-// 1.62 RVA: 0x25B1920
-/// @pattern 48 8B C4 48 89 48 08 55 41 55 48 8D 68 A8 48 81 EC 48 01 00 00 48 89 58 10 0F 57 C0 48 89 70 E8
-void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
-                   RED4ext::ink::WidgetReference *);
 
 void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                             RED4ext::game::FxResource *aOut, int64_t a4) {
@@ -43,26 +37,6 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   if (aOut) {
     aOut->effect.path = value.resource.path;
     // aOut->effect.Resolve();
-  }
-}
-
-decltype(&UpdateNavPath) UpdateNavPath_Original;
-
-void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
-                   RED4ext::ink::WidgetReference *widgetRef) {
-  UpdateNavPath_Original(mmcc, a2, questOrPOI, widgetRef);
-
-  auto rtti = RED4ext::CRTTISystem::Get();
-  if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
-    auto profiler = CyberpunkMod::Profiler("UpdateNavPath", 5);
-    auto fnp = InWorldNavigation::GetInstance();
-    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
-    auto stack = RED4ext::CStack(fnp, &args, 1, nullptr, 0);
-    rtti->GetClass("InWorldNavigation")->GetFunction("Update")->Execute(&stack);
-    auto avg = profiler.End();
-    if (avg) {
-      spdlog::info("Average InWorldNavigation loop time: {}", avg);
-    }
   }
 }
 
@@ -151,9 +125,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     ArchiveXL::RegisterArchive(aHandle, "in_world_navigation.archive");
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr), reinterpret_cast<void *>(&UpdateNavPath),
-                          reinterpret_cast<void **>(&UpdateNavPath_Original));
-
+    ModModuleFactory::GetInstance().Load(aSdk, aHandle);
 
     break;
   }
@@ -162,7 +134,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     spdlog::info("Shutting down");
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(UpdateNavPath_Addr));
+    ModModuleFactory::GetInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;
   }
