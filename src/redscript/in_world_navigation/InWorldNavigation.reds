@@ -17,6 +17,7 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Display mode")
   @runtimeProperty("ModSettings.displayValues", "\"Always\", \"When Driving\", \"When Walking\"")
+  @runtimeProperty("ModSettings.dependency", "enabled")
   let mode: InWorldNavigationMode = InWorldNavigationMode.Driving;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
@@ -25,6 +26,7 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "20.0")
+  @runtimeProperty("ModSettings.dependency", "enabled")
   let spacing: Float = 5.0;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
@@ -32,6 +34,7 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.step", "5")
   @runtimeProperty("ModSettings.min", "10")
   @runtimeProperty("ModSettings.max", "2000")
+  @runtimeProperty("ModSettings.dependency", "enabled")
   let maxPoints: Int32 = 200;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
@@ -40,6 +43,7 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
+  @runtimeProperty("ModSettings.dependency", "enabled")
   let distanceToFade: Float = 25.0;
 
   let navPathFXs: array<array<ref<FxInstance>>>;
