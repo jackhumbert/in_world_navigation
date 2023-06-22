@@ -32,8 +32,8 @@ configure_red4ext_addresses(Addresses.hpp)
 find_package(Detours)
 find_package(Spdlog)
 find_package(ArchiveXL)
-find_package(ModSettings)
 find_package(RedLib)
+find_package(ModSettings)
 
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
