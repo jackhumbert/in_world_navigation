@@ -24,7 +24,7 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.displayName", "Arrow spacing")
   @runtimeProperty("ModSettings.description", "In-game units between arrows")
   @runtimeProperty("ModSettings.step", "0.5")
-  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.min", "0.5")
   @runtimeProperty("ModSettings.max", "20.0")
   @runtimeProperty("ModSettings.dependency", "enabled")
   let spacing: Float = 5.0;
