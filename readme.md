@@ -1,5 +1,7 @@
 # In-World Navigation
 
+[![](https://byob.yarr.is/jackhumbert/in_world_navigation/cp_version)](https://github.com/jackhumbert/in_world_navigation/actions/workflows/build.yaml)
+
 This mod displays in-world holographic arrows for quest/point of interest navigation, mirroring the dots in the minimap. They're currently displayed all of the time, but will eventually be configurable.
 
 ![preview](preview.jpg)
