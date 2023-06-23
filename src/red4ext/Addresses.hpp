@@ -8,5 +8,5 @@
 #define LoadResRefAddr_Addr 0x20EAE0
 #endif
 #ifndef UpdateNavPath_Addr
-#define UpdateNavPath_Addr 0x25B6A70
+#define UpdateNavPath_Addr 0x25B6BA0
 #endif
