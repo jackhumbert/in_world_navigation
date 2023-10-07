@@ -3,7 +3,7 @@
 
 // 1.61 RVA: 0x204390
 // 1.62 RVA: 0x204A90
-/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 60 41 0F B6 D8 48 8B FA 48 8B F1 48 C7 44 24 20 00 00
+/// @pattern 40 53 48 83 EC 30 33 C0 45 8A C8 4C 8D 44 24 20 48 89 44 24 20 89 44 24 28 48 8B DA 88 44 24 2C
 constexpr uintptr_t LoadResRefAddr = LoadResRefAddr_Addr;
 
 template <typename T>
