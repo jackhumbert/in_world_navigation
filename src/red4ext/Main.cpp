@@ -80,10 +80,10 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
 
   // expose the minimap members to the scripts
   auto ms = rtti->GetClass("gameuiMinimapContainerController");
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "questPoints", nullptr, 0x1E0));
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "hasQuestMappin", nullptr, 0x1F0));
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "poiPoints", nullptr, 0x208));
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "hasPoiMappin", nullptr, 0x218));
+  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "questPoints", nullptr, 0x1F8));
+  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "hasQuestMappin", nullptr, 0x208));
+  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "poiPoints", nullptr, 0x220));
+  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "hasPoiMappin", nullptr, 0x230));
 
   auto getQuestMappin =
       RED4ext::CClassFunction::Create(ms, "GetQuestMappin", "GetQuestMappin", &GetQuestMappin, {.isNative = true});
