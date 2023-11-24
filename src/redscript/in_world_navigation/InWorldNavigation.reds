@@ -99,6 +99,8 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.HuntForPsychoVariant:
         case gamedataMappinVariant.Zzz06_NCPDGigVariant:
         case gamedataMappinVariant.BountyHuntVariant:
+        case gamedataMappinVariant.Zzz12_WorldEncounterVariant:
+        case gamedataMappinVariant.Zzz09_CourierSandboxActivityVariant:
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
@@ -116,6 +118,7 @@ public native class InWorldNavigation extends IScriptable {
           break; 
         case gamedataMappinVariant.ServicePointDropPointVariant:
         case gamedataMappinVariant.CustomPositionVariant:
+        case gamedataMappinVariant.Zzz01_CarForPurchaseVariant:
           return this.navPathWhiteResource;
           break;
       }
