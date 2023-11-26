@@ -88,7 +88,6 @@ public native class InWorldNavigation extends IScriptable {
   public func GetResourceForVariant(variant: gamedataMappinVariant) -> FxResource {
       switch (variant) {     
         case gamedataMappinVariant.Zzz02_MotorcycleForPurchaseVariant:
-        case gamedataMappinVariant.Zzz01_CarForPurchaseVariant:
         case gamedataMappinVariant.Zzz05_ApartmentToPurchaseVariant:
         case gamedataMappinVariant.QuestGiverVariant:
         case gamedataMappinVariant.FixerVariant:
