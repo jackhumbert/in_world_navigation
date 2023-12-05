@@ -9,7 +9,7 @@
 // 1.61hf RVA: 0x259FAF0
 // 1.62 RVA: 0x25B1920
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 41 54 41 55 41 56 41 57 48 8B EC 48 81 EC 80 00
-/// @nth 2/27
+/// @nth 1/28
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
                    RED4ext::ink::WidgetReference *);
 
