@@ -102,6 +102,7 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.BountyHuntVariant:
         case gamedataMappinVariant.Zzz12_WorldEncounterVariant:
         case gamedataMappinVariant.Zzz09_CourierSandboxActivityVariant:
+        case gamedataMappinVariant.Zzz18_RacingVariant:
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
