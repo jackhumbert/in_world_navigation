@@ -74,6 +74,7 @@ public native class InWorldNavigation extends IScriptable {
     this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
     this.navPathCyanResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_cyan.effect");
     this.navPathPurpleResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_purple.effect");
+    this.navPathSkyBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_purple.effect");
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
@@ -120,6 +121,9 @@ public native class InWorldNavigation extends IScriptable {
           break;
         case gamedataMappinVariant.Zzz17_NCARTVariant:
           return this.navPathPurpleResource;
+          break;
+        case gamedataMappinVariant.Zzz16_RelicDeviceBasicVariant:
+          return this.navPathSkyBlueResource;
           break;
         case gamedataMappinVariant.ServicePointDropPointVariant:
         case gamedataMappinVariant.CustomPositionVariant:
