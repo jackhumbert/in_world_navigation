@@ -4,12 +4,8 @@
 #include "CyberpunkMod.hpp"
 #include "InWorldNavigation.hpp"
 
-// 1.6  RVA: 0x259E440
-// 1.61 RVA: 0x259F3C0
-// 1.61hf RVA: 0x259FAF0
-// 1.62 RVA: 0x25B1920
-/// @pattern 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 41 54 41 55 41 56 41 57 48 8B EC 48 81 EC 80 00
-/// @nth 1/28
+// could also use *(gameuiMinimapContainerController_VFT_Addr + 0x240) instead of this pattern
+#define UpdateNavPath_Addr (0x002ea510 + 0x1000)
 void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
                    RED4ext::ink::WidgetReference *);
 
