@@ -4,12 +4,7 @@
 #include "CyberpunkMod.hpp"
 #include "InWorldNavigation.hpp"
 
-// could also use *(gameuiMinimapContainerController_VFT_Addr + 0x240) instead of this pattern
-#define UpdateNavPath_Addr (0x002ea510 + 0x1000)
-void UpdateNavPath(RED4ext::game::ui::MinimapContainerController *, __int64, unsigned __int8,
-                   RED4ext::ink::WidgetReference *);
-
-REGISTER_HOOK(void, UpdateNavPath, RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
+REGISTER_HOOK_HASH(void, 3797170204, UpdateNavPath, RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
                    RED4ext::ink::WidgetReference *widgetRef) {
   UpdateNavPath_Original(mmcc, a2, questOrPOI, widgetRef);
 
