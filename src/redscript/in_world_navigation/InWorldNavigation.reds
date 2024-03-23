@@ -54,6 +54,7 @@ public native class InWorldNavigation extends IScriptable {
   let navPathWhiteResource: FxResource;
   let navPathTealResource: FxResource;
   let navPathCyanResource: FxResource;
+  let navPathPurpleResource: FxResource;
 
   let questResource: FxResource;
   let poiResource: FxResource;
@@ -72,6 +73,8 @@ public native class InWorldNavigation extends IScriptable {
     this.navPathWhiteResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_white.effect");
     this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
     this.navPathCyanResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_cyan.effect");
+    this.navPathPurpleResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_purple.effect");
+    this.navPathSkyBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_purple.effect");
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
@@ -88,7 +91,6 @@ public native class InWorldNavigation extends IScriptable {
   public func GetResourceForVariant(variant: gamedataMappinVariant) -> FxResource {
       switch (variant) {     
         case gamedataMappinVariant.Zzz02_MotorcycleForPurchaseVariant:
-        case gamedataMappinVariant.Zzz01_CarForPurchaseVariant:
         case gamedataMappinVariant.Zzz05_ApartmentToPurchaseVariant:
         case gamedataMappinVariant.QuestGiverVariant:
         case gamedataMappinVariant.FixerVariant:
@@ -99,6 +101,9 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.HuntForPsychoVariant:
         case gamedataMappinVariant.Zzz06_NCPDGigVariant:
         case gamedataMappinVariant.BountyHuntVariant:
+        case gamedataMappinVariant.Zzz12_WorldEncounterVariant:
+        case gamedataMappinVariant.Zzz09_CourierSandboxActivityVariant:
+        case gamedataMappinVariant.Zzz18_RacingVariant:
          return this.navPathTealResource;
           break;
         case gamedataMappinVariant.DefaultQuestVariant:
@@ -113,9 +118,16 @@ public native class InWorldNavigation extends IScriptable {
         case gamedataMappinVariant.HiddenStashVariant: 
         case gamedataMappinVariant.OutpostVariant:
           return this.navPathCyanResource;
-          break; 
+          break;
+        case gamedataMappinVariant.Zzz17_NCARTVariant:
+          return this.navPathPurpleResource;
+          break;
+        case gamedataMappinVariant.Zzz16_RelicDeviceBasicVariant:
+          return this.navPathSkyBlueResource;
+          break;
         case gamedataMappinVariant.ServicePointDropPointVariant:
         case gamedataMappinVariant.CustomPositionVariant:
+        case gamedataMappinVariant.Zzz01_CarForPurchaseVariant:
           return this.navPathWhiteResource;
           break;
       }
