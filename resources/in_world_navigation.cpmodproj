@@ -1,1 +1,8 @@
-﻿<?xml version="1.0" encoding="utf-8"?><CP77Mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><Author /><Email /><Name>in_world_navigation</Name><Version /></CP77Mod>
+<?xml version="1.0" encoding="utf-8"?>
+<CP77Mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>in_world_navigation</Name>
+  <ModName>in_world_navigation</ModName>
+  <Author />
+  <Email />
+  <Version />
+</CP77Mod>

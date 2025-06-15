@@ -4,15 +4,25 @@
 #include "CyberpunkMod.hpp"
 #include "InWorldNavigation.hpp"
 
-REGISTER_HOOK_HASH(void, 3797170204, UpdateNavPath, RED4ext::game::ui::MinimapContainerController *mmcc, __int64 a2, unsigned __int8 questOrPOI,
-                   RED4ext::ink::WidgetReference *widgetRef) {
-  UpdateNavPath_Original(mmcc, a2, questOrPOI, widgetRef);
+// 3797170204 (this, context, type, widgetRef)
+// void game::ui::MinimapContainerController::UpdateGPSPath(ink::IWidgetController::UpdateContext const &, game::gps::ETargetType, ink::LinePatternWidgetReference const &)
+
+// could use 1268721260 (this, type, data)
+// void game::ui::MappinsContainerController::OnGPSPathChanged(game::gps::ETargetType, game::gps::IListener::PathData const &)
+
+REGISTER_HOOK_HASH(void, 3797170204, UpdateNavPath, 
+    RED4ext::game::ui::MinimapContainerController *mmcc, 
+    __int64 updateContext, 
+    unsigned __int8 targetType,
+    RED4ext::ink::WidgetReference *widgetRef
+  ) {
+  UpdateNavPath_Original(mmcc, updateContext, targetType, widgetRef);
 
   auto rtti = RED4ext::CRTTISystem::Get();
   if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
     // auto profiler = CyberpunkMod::Profiler("UpdateNavPath", 5);
     auto fnp = InWorldNavigation::GetInstance();
-    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &questOrPOI);
+    auto args = RED4ext::CStackType(rtti->GetType("Int32"), &targetType);
     auto stack = RED4ext::CStack(fnp, &args, 1, nullptr);
     auto update = rtti->GetClass("InWorldNavigation")->GetFunction("Update");
     if (update)
