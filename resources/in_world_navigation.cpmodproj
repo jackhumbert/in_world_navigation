@@ -5,4 +5,18 @@
   <Author />
   <Email />
   <Version />
+  <OpenProjectFiles>user\jackhumbert\effects\world_navigation_blue.effect</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\particles\world_navigation_blue.particle</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\common\main_colors.inkstyle</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\particles\world_navigation_yellow.particle</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\common\mappins.inkstyle</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\common\rarity_hud.inkstyle</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\mappins\gameplay\gameplay_mappin.inkwidget</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\mappins\atlas_map_pins.inkatlas</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\minimap\minimap.inkwidget</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\minimap\atlas_minimap.inkatlas</OpenProjectFiles>
+  <OpenProjectFiles>ep1\gameplay\gui\widgets\minimap\atlas_minimap.inkatlas</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\hud_johnny\atlas_minimap.inkatlas</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\widgets\minimap\atlas_minimap.inkatlas</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\common\icons\mappin_icons.inkatlas</OpenProjectFiles>
 </CP77Mod>

@@ -54,14 +54,18 @@ public native class InWorldNavigation extends IScriptable {
   let navPathWhiteResource: FxResource;
   let navPathTealResource: FxResource;
   let navPathCyanResource: FxResource;
-
-  let questResource: FxResource;
-  let poiResource: FxResource;
-
-  let questVariant: gamedataMappinVariant;
-  let poiVariant: gamedataMappinVariant;
+  let navPathFastTravelMetroResource: FxResource;
 
   let distanceToAnimate: Float;
+
+  let questMappin: wref<IMappin>;
+  let poiMappin: wref<IMappin>;
+
+  let questState: CName;
+  let poiState: CName;
+
+  let currentQuestState: CName;
+  let currentPoiState: CName;
 
   public func Setup(player: ref<GameObject>) -> Void {
     this.player = player;
@@ -72,11 +76,15 @@ public native class InWorldNavigation extends IScriptable {
     this.navPathWhiteResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_white.effect");
     this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
     this.navPathCyanResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_cyan.effect");
+    this.navPathFastTravelMetroResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\fast_travel_metro.effect");
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
     ArrayPush(this.navPathFXs, questFx);
     ArrayPush(this.navPathFXs, poiFx);
+
+    this.questState = n"Quest";
+    this.poiState = n"Gigs";
 
     let questTransforms: array<Transform>;
     let poisTransforms: array<Transform>;
@@ -85,41 +93,66 @@ public native class InWorldNavigation extends IScriptable {
     ModSettings.RegisterListenerToClass(this);
   }
 
-  public func GetResourceForVariant(variant: gamedataMappinVariant) -> FxResource {
-      switch (variant) {     
-        case gamedataMappinVariant.Zzz02_MotorcycleForPurchaseVariant:
-        case gamedataMappinVariant.Zzz01_CarForPurchaseVariant:
-        case gamedataMappinVariant.Zzz05_ApartmentToPurchaseVariant:
-        case gamedataMappinVariant.QuestGiverVariant:
-        case gamedataMappinVariant.FixerVariant:
-        case gamedataMappinVariant.RetrievingVariant:
-        case gamedataMappinVariant.SabotageVariant:
-        case gamedataMappinVariant.ClientInDistressVariant:
-        case gamedataMappinVariant.ThieveryVariant:
-        case gamedataMappinVariant.HuntForPsychoVariant:
-        case gamedataMappinVariant.Zzz06_NCPDGigVariant:
-        case gamedataMappinVariant.BountyHuntVariant:
-         return this.navPathTealResource;
-          break;
-        case gamedataMappinVariant.DefaultQuestVariant:
-        case gamedataMappinVariant.ExclamationMarkVariant:
-          return this.navPathYellowResource; 
-          break;
-        case gamedataMappinVariant.TarotVariant:
-        case gamedataMappinVariant.FastTravelVariant:
-          return this.navPathBlueResource;
-          break; 
-        case gamedataMappinVariant.GangWatchVariant:
-        case gamedataMappinVariant.HiddenStashVariant: 
-        case gamedataMappinVariant.OutpostVariant:
-          return this.navPathCyanResource;
-          break; 
-        case gamedataMappinVariant.ServicePointDropPointVariant:
-        case gamedataMappinVariant.CustomPositionVariant:
-          return this.navPathWhiteResource;
-          break;
-      }
-      return this.navPathWhiteResource;
+  // use the state the game uses to determine the color
+  public func GetResourceForState(state: CName) -> FxResource {
+    switch (state) {
+      case n"Quest":
+      case n"IncendiaryGrenade":
+        // ActiveYellow
+        return this.navPathYellowResource; 
+      case n"QuestUntracked":
+        // DarkGold
+        return this.navPathYellowResource; 
+      case n"QuestComplete":
+        // QuestComplete
+        return this.navPathYellowResource; 
+      case n"Gigs":
+        // StreetCred
+        return this.navPathTealResource;
+      case n"FastTravel":
+        // StrongFastTravel
+        return this.navPathBlueResource;
+      case n"FastTravelMetro":
+        // FastTravelMetro
+        return this.navPathFastTravelMetroResource;
+      case n"InteractionDefault":
+      case n"EMPGrenade":
+      case n"RemoteControlDriving":
+        // ActiveBlue
+        return this.navPathCyanResource;
+      case n"Story":
+        // Blue
+        return this.navPathBlueResource;
+      case n"Default":
+      case n"Impossible":
+      case n"Available":
+      case n"FragGrenade":
+      case n"CuttingGrenade":
+        // ActiveRed
+        return this.navPathWhiteResource;
+      case n"Player":
+      case n"BiohazardGrenade":
+        // ActiveGreen
+        return this.navPathWhiteResource;
+      case n"Vehicle":
+      case n"VehicleForPurchase":
+      case n"ServicePoint":
+        // White
+        return this.navPathWhiteResource;
+      case n"Relic":
+        // Relic
+        return this.navPathTealResource;
+      case n"Shard":
+        // Shared
+        return this.navPathWhiteResource;
+      case n"ShardRead":
+        // DarkGrey
+        return this.navPathWhiteResource;
+      case n"PlayerTracked":
+        // DamageTypeChemical_Critical
+        return this.navPathWhiteResource;
+    }
+    return this.navPathWhiteResource;
   }
 
   public func Update(canUpdate: Int32) {
@@ -129,28 +162,26 @@ public native class InWorldNavigation extends IScriptable {
         ((isMounted && NotEquals(this.mode, InWorldNavigationMode.Walking)) ||
          (!isMounted && NotEquals(this.mode, InWorldNavigationMode.Driving))
         ) { 
-        let questMappin = this.mmcc.GetQuestMappin();
-        if IsDefined(questMappin) {
-          let questVariant = questMappin.GetVariant();
-          if !Equals(questVariant, this.questVariant) {
-            this.questVariant = questVariant;
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
+        this.questMappin = this.mmcc.GetQuestMappin();
+        if IsDefined(this.questMappin) {
+          if !Equals(this.currentQuestState, this.questState) {
+            this.currentQuestState = this.questState;
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForState(this.currentQuestState), true);
           } else {
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForState(this.currentQuestState), false);
           }
         } else {     
           for fx in this.navPathFXs[0] {
             fx.BreakLoop();
           }
         }
-        let poiMappin = this.mmcc.GetPOIMappin();
-        if IsDefined(poiMappin) {
-          let poiVariant = poiMappin.GetVariant();
-          if !Equals(poiVariant, this.poiVariant) {
-            this.poiVariant = poiVariant;
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
+        this.poiMappin = this.mmcc.GetPOIMappin();
+        if IsDefined(this.poiMappin) {
+          if !Equals(this.currentPoiState, this.poiState) {
+            this.currentPoiState = this.poiState;
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForState(this.currentPoiState), true);
           } else {
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForState(this.currentPoiState), false);
           }
         } else {
           for fx in this.navPathFXs[1] {

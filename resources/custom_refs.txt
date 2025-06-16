@@ -1,0 +1,15 @@
+user\jackhumbert\effects\world_navigation_blue.effect
+user\jackhumbert\effects\world_navigation_cyan.effect
+user\jackhumbert\effects\world_navigation_teal.effect
+user\jackhumbert\effects\world_navigation_white.effect
+user\jackhumbert\effects\world_navigation_yellow.effect
+user\jackhumbert\materials\arrow.mi
+user\jackhumbert\meshes\arrow.mesh
+user\jackhumbert\particles\fast_travel_metro.particle
+user\jackhumbert\particles\world_navigation_blue.particle
+user\jackhumbert\particles\world_navigation_cyan.particle
+user\jackhumbert\particles\world_navigation_teal.particle
+user\jackhumbert\particles\world_navigation_white.particle
+user\jackhumbert\particles\world_navigation_yellow.particle
+user\jackhumbert\textures\arrow_checker.xbm
+user\jackhumbert\textures\arrow_dots.xbm
