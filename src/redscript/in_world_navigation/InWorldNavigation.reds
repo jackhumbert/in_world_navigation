@@ -16,7 +16,10 @@ public native class InWorldNavigation extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Display mode")
-  @runtimeProperty("ModSettings.displayValues", "\"Always\", \"When Driving\", \"When Walking\"")
+  @runtimeProperty("ModSettings.displayValues.Always", "Always")
+  @runtimeProperty("ModSettings.displayValues.Driving", "When Driving")
+  @runtimeProperty("ModSettings.displayValues.Walking", "When Walking")
+
   @runtimeProperty("ModSettings.dependency", "enabled")
   let mode: InWorldNavigationMode = InWorldNavigationMode.Driving;
 
