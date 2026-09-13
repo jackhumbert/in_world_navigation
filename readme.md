@@ -2,7 +2,14 @@
 
 [![](https://byob.yarr.is/jackhumbert/in_world_navigation/cp_version)](https://github.com/jackhumbert/in_world_navigation/actions/workflows/build.yaml)
 
-This mod displays in-world holographic arrows for quest/point of interest navigation, mirroring the dots in the minimap. They're currently displayed all of the time, but will eventually be configurable.
+This mod displays in-world holographic arrows for quest/point of interest navigation, mirroring the dots in the minimap.
+
+## Settings
+
+Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display mode (always / driving / walking), spacing, count, fade distance, and:
+
+* **Toggle arrows key** (default `;`): flips "Show arrows" in-game. Needs [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader); without it the arrows can still be toggled from the settings page.
+* **Follow HUD visibility** (default on): hides the arrows whenever the minimap is hidden, so they go away in photo mode and with HUD-hiding mods (Limited HUD, HUD toggles, AMM) without a dependency on any of them.
 
 ![preview](preview.jpg)
 
@@ -15,6 +22,7 @@ This mod displays in-world holographic arrows for quest/point of interest naviga
 * [RED4ext](https://github.com/WopsS/RED4ext)
 * [Redscript](https://github.com/jac3km4/redscript)
 * [Mod Settings](https://github.com/jackhumbert/mod_settings)
+* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader) (optional, for the toggle key)
 
 ## Bugs
 

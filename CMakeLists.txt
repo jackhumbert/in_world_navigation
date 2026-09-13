@@ -43,6 +43,8 @@ target_link_libraries(${MOD_SLUG}.dll
     RedLib
 )
 configure_redscript(src/redscript)
+# picked up by Input Loader at runtime (see RegisterInputs in Main.cpp)
+configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_archives(resources/packed/archive/pc/mod/in_world_navigation.archive)
 configure_folder_file(readme.md)

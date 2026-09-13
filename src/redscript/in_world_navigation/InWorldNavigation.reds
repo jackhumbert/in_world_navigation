@@ -6,13 +6,27 @@ enum InWorldNavigationMode {
 
 public native class InWorldNavigation extends IScriptable {
   public static native func GetInstance() -> ref<InWorldNavigation>;
+  // true when the widget and every parent up to the HUD layer is visible with non-zero opacity
+  public static native func IsWidgetTreeVisible(widget: wref<inkWidget>) -> Bool;
 
   public let mmcc: ref<MinimapContainerController>;
   public let player: ref<GameObject>;
   
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
-  @runtimeProperty("ModSettings.displayName", "Enabled")
+  @runtimeProperty("ModSettings.displayName", "Show arrows")
+  @runtimeProperty("ModSettings.description", "Can also be toggled with the key below")
   let enabled: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Toggle arrows key")
+  @runtimeProperty("ModSettings.description", "Requires Input Loader")
+  let inWorldNavigationToggle: EInputKey = EInputKey.IK_Semicolon;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Follow HUD visibility")
+  @runtimeProperty("ModSettings.description", "Hide the arrows while the minimap is hidden (photo mode, Limited HUD, HUD toggles)")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let followHudVisibility: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Display mode")
@@ -91,6 +105,45 @@ public native class InWorldNavigation extends IScriptable {
     ArrayPush(this.navPathTransforms, questTransforms);
     ArrayPush(this.navPathTransforms, poisTransforms);
     ModSettings.RegisterListenerToClass(this);
+
+    // Setup runs on every player attach; unregister first so a press only toggles once
+    player.UnregisterInputListener(this, n"InWorldNavigation_Toggle");
+    player.RegisterInputListener(this, n"InWorldNavigation_Toggle");
+  }
+
+  protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
+    if Equals(ListenerAction.GetName(action), n"InWorldNavigation_Toggle") && ListenerAction.IsButtonJustPressed(action) {
+      this.ToggleEnabled();
+    }
+  }
+
+  // Flips the "Show arrows" setting through Mod Settings so it persists and the settings page stays in sync
+  public func ToggleEnabled() -> Void {
+    for configVar in ModSettings.GetVars(n"In-World Navigation", n"None") {
+      if Equals(configVar.GetName(), n"enabled") {
+        let boolVar = configVar as ModConfigVarBool;
+        if IsDefined(boolVar) {
+          boolVar.SetValue(!boolVar.GetValue());
+          ModSettings.AcceptChanges();
+          return;
+        }
+      }
+    }
+    // setting not found (shouldn't happen): flip the runtime value only
+    this.enabled = !this.enabled;
+  }
+
+  // false while the game HUD is hidden, using the minimap widget the arrows mirror as the signal
+  public func IsHudVisible() -> Bool {
+    if !this.followHudVisibility {
+      return true;
+    }
+    if GameInstance.GetPhotoModeSystem(this.player.GetGame()).IsPhotoModeActive() {
+      return false;
+    }
+    // covers vanilla context hiding, Limited HUD (fades the minimap root to 0 opacity), and mods that
+    // hide the whole HUD layer, without depending on any of them
+    return InWorldNavigation.IsWidgetTreeVisible(this.mmcc.GetRootWidget());
   }
 
   // use the state the game uses to determine the color
@@ -158,7 +211,7 @@ public native class InWorldNavigation extends IScriptable {
   public func Update(canUpdate: Int32) {
     if IsDefined(this.mmcc) {
       let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
-      if this.enabled && 
+      if this.enabled && this.IsHudVisible() &&
         ((isMounted && NotEquals(this.mode, InWorldNavigationMode.Walking)) ||
          (!isMounted && NotEquals(this.mode, InWorldNavigationMode.Driving))
         ) { 

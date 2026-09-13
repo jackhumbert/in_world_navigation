@@ -69,6 +69,30 @@ void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
 }
 
 
+// Input Loader is optional: resolve its exported Add() at runtime instead of linking against it, so the
+// plugin still loads (without the toggle keybind) when Input Loader is not installed.
+using InputLoaderAdd_t = void (*)(RED4ext::PluginHandle, const wchar_t *);
+
+void RegisterInputs(RED4ext::PluginHandle aHandle) {
+  auto module = GetModuleHandleW(L"input_loader");
+  if (!module) {
+    auto pluginDir = Utils::GetRootDir() / "red4ext" / "plugins" / "input_loader";
+    SetDllDirectoryW(pluginDir.c_str());
+    module = LoadLibraryW(L"input_loader");
+  }
+  if (!module) {
+    spdlog::warn("Input Loader not found - the toggle keybind will not be available");
+    return;
+  }
+  auto add = reinterpret_cast<InputLoaderAdd_t>(GetProcAddress(module, "Add"));
+  if (!add) {
+    spdlog::warn("Input Loader found, but it does not export Add() - the toggle keybind will not be available");
+    return;
+  }
+  add(aHandle, L"inputs.xml");
+  spdlog::info("Registered inputs.xml with Input Loader");
+}
+
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
 
 }
@@ -124,6 +148,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
+    RegisterInputs(aHandle);
     ArchiveXL::RegisterArchive(aHandle, "in_world_navigation.archive");
     ModModuleFactory::GetInstance().Load(aSdk, aHandle);
 

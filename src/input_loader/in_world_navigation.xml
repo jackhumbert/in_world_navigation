@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<bindings>
+	<!-- Toggles the arrows on/off. Available in every gameplay context that includes UIExploration
+	     (on foot, driving, passenger, driver combat, autodrive). -->
+	<context name="InWorldNavigation">
+		<action name="InWorldNavigation_Toggle" map="InWorldNavigation_Toggle" />
+	</context>
+
+	<context name="UIExploration" append="true">
+		<include name="InWorldNavigation" />
+	</context>
+
+	<!-- Rebindable from the Mod Settings page (the overridableUI name matches the redscript setting) -->
+	<mapping name="InWorldNavigation_Toggle" type="Button">
+		<button id="IK_Semicolon" overridableUI="inWorldNavigationToggle" />
+	</mapping>
+</bindings>
