@@ -29,7 +29,7 @@ cmake --install build
 3. Build, install, launch, check `red4ext/logs/in_world_navigation.log` for "Attaching UpdateNavPath" and drive a quest route.
 4. Tag.
 
-State on 2026-09-13: v0.1.21 (built for 2.30) loads and hooks on game 2.31 unchanged; pins bumped to the 2.31 SDK so the next tag reads "for 2.31". v0.1.22 is tagged but check whether it was ever released before cutting v0.1.23.
+State on 2026-09-13: v0.1.21 (built for 2.30) loads and hooks on game 2.31 unchanged; pins bumped to the 2.31 SDK so the next tag reads "for 2.31". Tags v0.1.21 and v0.1.22 exist on the remote but never produced GitHub releases (no workflow runs recorded; last published release is v0.1.20 for 2.30+), so the next release is v0.1.23.
 
 ## Releases
 
