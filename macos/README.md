@@ -1,6 +1,6 @@
 # In-World Navigation for macOS (Apple Silicon)
 
-A port of [jackhumbert/in-world-navigation](https://github.com/jackhumbert/in-world-navigation) v0.1.22 to the native macOS build of
+A port of [jackhumbert/in_world_navigation](https://github.com/jackhumbert/in_world_navigation) v0.1.22 to the native macOS build of
 Cyberpunk 2077 (2.3.1, Steam, Apple Silicon). Port by codeman101 (skyman3215). MIT, like upstream.
 
 Everything macOS-specific is in this folder and in `#ifdef __APPLE__` blocks in `src/red4ext`. The Windows build is meant to be
@@ -8,7 +8,9 @@ unchanged: `WINDOWS_CHECK.md` is the `unifdef -U__APPLE__` comparison against ta
 
 ## Status
 
-The dylib builds for arm64. It has not been run inside the game.
+The dylib builds for arm64 and loads in the game. Two automated in-game runs (a save with a tracked destination) passed: the hook
+logs INSTALLED, `InWorldNavigation.Update` runs about 900 times a minute, the POI path had 9 points and 4 arrow effects spawned.
+Only the POI path was exercised; the quest path and a person driving a route have not been checked yet.
 
 The live hook is `0x24e6b34` (hash 1661347149), `void(this)`. It is on the minimap controller vtables and calls `UpdateFromPoints`
 for the quest path (`this+0x228`) and then the POI path (`this+0x250`). After the original returns, if the type is
