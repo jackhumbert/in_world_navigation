@@ -1,0 +1,3 @@
+# Image-relative offsets In-World Navigation hooks. One per line; # starts a comment.
+# RED4ext-macos installs a detour only for an offset on this list. Any other Attach reports success and does nothing.
+0x24e6b34  # UpdateNavPath, void(this), hash 1661347149
