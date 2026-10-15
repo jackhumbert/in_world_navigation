@@ -1,16 +1,18 @@
 # In-World Navigation for macOS (Apple Silicon)
 
-A port of [jackhumbert/in_world_navigation](https://github.com/jackhumbert/in_world_navigation) v0.1.22 to the native macOS build of
-Cyberpunk 2077 (2.3.1, Steam, Apple Silicon). Port by codeman101 (skyman3215). MIT, like upstream.
+A port of [jackhumbert/in_world_navigation](https://github.com/jackhumbert/in_world_navigation) `main` (385cd85, which is v0.1.22 plus 8
+commits) to the native macOS build of Cyberpunk 2077 (2.3.1, Steam, Apple Silicon). Port by codeman101 (skyman3215). MIT, like upstream.
 
 Everything macOS-specific is in this folder and in `#ifdef __APPLE__` blocks in `src/red4ext`. The Windows build is meant to be
-unchanged: `WINDOWS_CHECK.md` is the `unifdef -U__APPLE__` comparison against tag v0.1.22. What is not done yet: `NOT_YET.md`.
+unchanged: `WINDOWS_CHECK.md` is the `unifdef -U__APPLE__` comparison against `main`. What is not done yet: `NOT_YET.md`.
 
 ## Status
 
 The dylib builds for arm64 and loads in the game. Two automated in-game runs (a save with a tracked destination) passed: the hook
 logs INSTALLED, `InWorldNavigation.Update` runs about 900 times a minute, the POI path had 9 points and 4 arrow effects spawned.
-Only the POI path was exercised; the quest path and a person driving a route have not been checked yet.
+Those runs were made on the v0.1.22 base, before the rebase onto `main`, and only the POI path was exercised. A player then
+hand-tested it in game on 2026-10-14: the arrows appear along the route while driving to a waypoint. The quest path has not been
+checked yet.
 
 The live hook is `0x24e6b34` (hash 1661347149), `void(this)`. It is on the minimap controller vtables and calls `UpdateFromPoints`
 for the quest path (`this+0x228`) and then the POI path (`this+0x250`). After the original returns, if the type is
@@ -28,7 +30,8 @@ The row is in `IwnSdkRows.inc` so the hash still resolves.
 - ArchiveXL for macOS. The archive is installed at `archive/Mac/mod/in_world_navigation.archive`, which ArchiveXL mounts at startup.
 - Mod Settings for macOS. The scripts call `ModSettings.RegisterListenerToClass`.
 
-There is no input XML in v0.1.22. No input loader file is shipped.
+`main` added a toggle-arrows key through Input Loader (a Windows plugin). On macOS the registration is compiled out and the arrows are
+toggled from the settings page (see `NOT_YET.md`).
 
 ## Build
 

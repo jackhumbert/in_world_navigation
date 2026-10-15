@@ -1,8 +1,9 @@
 # In-World Navigation on macOS: not done yet
 
 The dylib builds and runs in the game: two automated in-game runs passed (hook INSTALLED, `Update` called, POI path arrows
-spawned). Not checked yet: the quest path, a person driving a tracked route, and the plugin's own log file (it is not created on
-macOS; the loader log has the plugin's lines). Addresses below are the ones the Mac hook and the field reads use.
+spawned), and a player hand-tested it on 2026-10-14 (arrows appear along the route while driving to a waypoint). Not checked yet: the
+quest path and the plugin's own log file (it is not created on macOS; the loader log has the plugin's lines). Addresses below are the
+ones the Mac hook and the field reads use.
 
 ## Stale field offsets upstream
 
