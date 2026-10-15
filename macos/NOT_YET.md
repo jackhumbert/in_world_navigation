@@ -40,7 +40,8 @@ covers both GPS paths, so the hook calls `Update` for Int32 0 and then Int32 1. 
 - `scripts->Add` is skipped. The cache builder compiles `Scripts/`.
 - `IO/FileStream.cpp` and `Utils::ToWString` are not in the Mac target. Nothing in the plugin calls them.
 - Old Windows install paths (`r6/scripts/in_world_navigation`, `archive/pc/mod/in_world_navigation.archive`) are not deleted.
-- There is no input XML in v0.1.22, so there is no input-loader file.
+- The toggle-arrows key (`inputs.xml`, registered through Input Loader) is not on the Mac: Input Loader is a Windows plugin, so
+  `RegisterInputs` is compiled on Windows only. The arrows can still be turned on and off on the settings page.
 - Effect resource paths in the scripts use backslashes. The Mac resource loader accepts them (the arrow effects spawn in game).
 - Mod Settings is required for the settings properties (`RegisterListenerToClass`, `enabled:Bool = true`). This plugin does not
   change Mod Settings.

@@ -98,6 +98,7 @@ void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
 }
 
 
+#ifndef __APPLE__
 // Input Loader is optional: resolve its exported Add() at runtime instead of linking against it, so the
 // plugin still loads (without the toggle keybind) when Input Loader is not installed.
 using InputLoaderAdd_t = void (*)(RED4ext::PluginHandle, const wchar_t *);
@@ -121,6 +122,7 @@ void RegisterInputs(RED4ext::PluginHandle aHandle) {
   add(aHandle, L"inputs.xml");
   spdlog::info("Registered inputs.xml with Input Loader");
 }
+#endif // macOS: Input Loader is a Windows plugin; the arrows are toggled from the settings page there
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
 
