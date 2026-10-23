@@ -72,7 +72,7 @@ void IwnUpdateNavPath(RED4ext::game::ui::MinimapContainerController* mmcc)
 
 void IwnMac::AttachUpdateNavPath(const RED4ext::Sdk* aSdk, RED4ext::PluginHandle aHandle)
 {
-  g_updateNavPathTarget = ImageBase() + 0x24e6b34;
+  g_updateNavPathTarget = ImageBase() + 0x4c55228;
   void* original = nullptr;
   g_updateNavPathInstalled = TryAttach(aSdk, aHandle, g_updateNavPathTarget, reinterpret_cast<void*>(&IwnUpdateNavPath),
                                        &original, "UpdateNavPath");
