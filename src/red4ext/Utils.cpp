@@ -3,13 +3,22 @@
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#ifdef __APPLE__
+#include "MacShims.hpp"
+#endif
 
 void Utils::CreateLogger()
 {
     auto rootDir = GetRootDir();
+#ifdef __APPLE__
+    auto red4extDir = rootDir / "red4ext";
+    auto logsDir = red4extDir / "logs";
+    spdlog::filename_t logFile = (logsDir / "in_world_navigation.log").string();
+#else
     auto red4extDir = rootDir / L"red4ext";
     auto logsDir = red4extDir / L"logs";
     spdlog::filename_t logFile = (logsDir / L"in_world_navigation.log");
+#endif
 
     auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
@@ -25,6 +34,9 @@ void Utils::CreateLogger()
 
 std::filesystem::path Utils::GetRootDir()
 {
+#ifdef __APPLE__
+    return IwnMac::RootDir();
+#else
     constexpr auto pathLength = MAX_PATH + 1;
 
     // Try to get the executable path until we can fit the length of the path.
@@ -47,8 +59,10 @@ std::filesystem::path Utils::GetRootDir()
                        .parent_path(); // Resolve to game root directory.
 
     return rootDir;
+#endif
 }
 
+#ifndef __APPLE__
 std::wstring Utils::ToWString(const char* aText)
 {
     auto length = strlen(aText);
@@ -58,3 +72,4 @@ std::wstring Utils::ToWString(const char* aText)
 
     return result;
 }
+#endif

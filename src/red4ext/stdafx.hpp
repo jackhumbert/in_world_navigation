@@ -6,9 +6,14 @@
 #include <memory>
 #include <vector>
 
+#ifdef __APPLE__
+#include <RED4ext/RED4ext.hpp>
+#include <spdlog/spdlog.h>
+#else
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <detours.h>
 
 #include <RED4ext/RED4ext.hpp>
 #include <spdlog/spdlog.h>
+#endif

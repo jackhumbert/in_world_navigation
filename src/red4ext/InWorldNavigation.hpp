@@ -1,4 +1,15 @@
 #include <RedLib.hpp>
+#ifdef __APPLE__
+// clang instantiates Handle<T> for the members inkWidget.hpp only forward-declares, so it needs the full types (MSVC does not)
+#include <RED4ext/Scripting/Natives/Generated/ink/IEffect.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/Layer.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/LayerProxy.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/PropertyManager.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/StyleResourceWrapper.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/UserData.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/WidgetLibraryResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/WidgetLogicController.hpp>
+#endif
 #include <RED4ext/Scripting/Natives/inkWidget.hpp>
 
 struct InWorldNavigation : RED4ext::IScriptable {
