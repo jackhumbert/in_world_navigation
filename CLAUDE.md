@@ -29,6 +29,8 @@ cmake --install build
 3. Build, install, launch, check `red4ext/logs/in_world_navigation.log` for "Attaching UpdateNavPath" and drive a quest route.
 4. Tag.
 
+State on 2026-10-25: game 2.5 broke the RED4ext ABI (`Callback` buffer 32 to 64, `CBaseFunction` 0xB0 to 0xF0), so 2.31 builds crash on load in `AddRegistrationFunc`. Hashes, the `MappinsContainerController` layout (PathData at +0x218, stride 40) and the redscript were unchanged. Rebuilding on SDK `new-types` 732300b6, cyberpunk_cmake 9d97027 and mod_settings 29f27e4 fixed it, tested in game. red_lib stays on the `jack` fork (2d9bb93); upstream was not needed. Configure with `-DCYBERPUNK_2077_GAME_DIR=...` when the game is not on C:.
+
 State on 2026-09-13: v0.1.21 (built for 2.30) loads and hooks on game 2.31 unchanged; pins bumped to the 2.31 SDK so the next tag reads "for 2.31". Tags v0.1.21 and v0.1.22 exist on the remote but never produced GitHub releases (no workflow runs recorded; last published release is v0.1.20 for 2.30+), so the next release is v0.1.23.
 
 ## Releases
