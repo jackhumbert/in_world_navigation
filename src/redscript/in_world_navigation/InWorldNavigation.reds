@@ -60,6 +60,39 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.dependency", "enabled")
   let distanceToFade: Float = 25.0;
 
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow opacity")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.05")
+  @runtimeProperty("ModSettings.max", "1.0")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let opacity: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Vertical offset")
+  @runtimeProperty("ModSettings.description", "Meters to raise (or lower) the arrows from the path")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "-1.0")
+  @runtimeProperty("ModSettings.max", "3.0")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let verticalOffset: Float = 0.0;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Hide during autodrive")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let hideInAutodrive: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Hide as a passenger")
+  @runtimeProperty("ModSettings.description", "Hide while someone else is driving (Delamain, quest rides)")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let hideAsPassenger: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Hide on the metro")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let hideOnMetro: Bool = true;
+
   let navPathFXs: array<array<ref<FxInstance>>>;
   let navPathTransforms: array<array<Transform>>;
 
@@ -146,6 +179,29 @@ public native class InWorldNavigation extends IScriptable {
     return InWorldNavigation.IsWidgetTreeVisible(this.mmcc.GetRootWidget());
   }
 
+  // true while the player is along for the ride: on the metro, as a passenger, or with autodrive on
+  public func IsRideHidden(isMounted: Bool) -> Bool {
+    let game = this.player.GetGame();
+    // the metro counts as a mounted vehicle, so check its tag (the one the game's radio and hints use) first
+    if this.hideOnMetro && StatusEffectSystem.ObjectHasStatusEffectWithTag(this.player, n"MetroRide") {
+      return true;
+    }
+    if !isMounted {
+      return false;
+    }
+    if this.hideAsPassenger && !VehicleComponent.IsDriver(game, this.player) {
+      return true;
+    }
+    if this.hideInAutodrive {
+      // the blackboard the minimap watches for its autodrive highlight
+      let autodrive = GameInstance.GetBlackboardSystem(game).Get(GetAllBlackboardDefs().UI_AutodriveData);
+      if IsDefined(autodrive) && autodrive.GetBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveEnabled) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // use the state the game uses to determine the color
   public func GetResourceForState(state: CName) -> FxResource {
     switch (state) {
@@ -211,7 +267,7 @@ public native class InWorldNavigation extends IScriptable {
   public func Update(canUpdate: Int32) {
     if IsDefined(this.mmcc) {
       let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
-      if this.enabled && this.IsHudVisible() &&
+      if this.enabled && this.IsHudVisible() && !this.IsRideHidden(isMounted) &&
         ((isMounted && NotEquals(this.mode, InWorldNavigationMode.Walking)) ||
          (!isMounted && NotEquals(this.mode, InWorldNavigationMode.Driving))
         ) { 
@@ -287,7 +343,8 @@ public native class InWorldNavigation extends IScriptable {
           let position = Vector4.Interpolate(lastDrawnPointInLastGroup, points[i-1], ratio);
           let orientation = Quaternion.BuildFromDirectionVector(lastDrawnPoint - position);
           distance += this.spacing;
-          ArrayPush(dots, Transform.Create(position, orientation));
+          // offset only the drawn transform so the orientation still follows the path itself
+          ArrayPush(dots, Transform.Create(new Vector4(position.X, position.Y, position.Z + this.verticalOffset, position.W), orientation));
           lastDrawnPoint = position;
         }
       }
@@ -347,6 +404,6 @@ public native class InWorldNavigation extends IScriptable {
         this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(resource, wt);
       }
     }
-    this.navPathFXs[type][i].SetBlackboardValue(n"alpha", MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0));
+    this.navPathFXs[type][i].SetBlackboardValue(n"alpha", MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
   }
 }
