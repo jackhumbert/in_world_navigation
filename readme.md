@@ -9,7 +9,7 @@ This mod displays in-world holographic arrows for quest/point of interest naviga
 Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display mode (always / driving / walking), spacing, count, fade distance, and:
 
 * **Toggle arrows key** (default `;`): flips "Show arrows" in-game. Needs [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader); without it the arrows can still be toggled from the settings page.
-* **Follow HUD visibility** (default on): hides the arrows whenever the minimap is hidden, so they go away in photo mode and with HUD-hiding mods (Limited HUD, HUD toggles, AMM) without a dependency on any of them.
+* **Hide with the minimap** (default off): hides the arrows whenever the minimap is hidden, by the game's minimap setting or by HUD-hiding mods (Limited HUD, HUD toggles, AMM), without a dependency on any of them. Leave it off to keep the arrows with the minimap turned off. Photo mode always hides the arrows.
 * **Arrow opacity** and **Vertical offset**: scale the arrows' brightness, and raise or lower them off the path (in meters). Both apply live.
 * **Hide during autodrive**, **Hide as a passenger**, **Hide on the metro** (all default on): no arrows while the car drives itself, while someone else is driving, or on the NCART.
 

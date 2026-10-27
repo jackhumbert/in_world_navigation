@@ -23,10 +23,10 @@ public native class InWorldNavigation extends IScriptable {
   let inWorldNavigationToggle: EInputKey = EInputKey.IK_Semicolon;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
-  @runtimeProperty("ModSettings.displayName", "Follow HUD visibility")
-  @runtimeProperty("ModSettings.description", "Hide the arrows while the minimap is hidden (photo mode, Limited HUD, HUD toggles)")
+  @runtimeProperty("ModSettings.displayName", "Hide with the minimap")
+  @runtimeProperty("ModSettings.description", "Hide the arrows whenever the minimap is hidden (minimap setting, Limited HUD, HUD toggles). Off: they show without the minimap. Photo mode always hides them")
   @runtimeProperty("ModSettings.dependency", "enabled")
-  let followHudVisibility: Bool = true;
+  let followMinimapVisibility: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Display mode")
@@ -166,16 +166,18 @@ public native class InWorldNavigation extends IScriptable {
     this.enabled = !this.enabled;
   }
 
-  // false while the game HUD is hidden, using the minimap widget the arrows mirror as the signal
+  // false in photo mode, and while the minimap is hidden if the arrows follow it. The game gives scripts no
+  // whole-HUD signal (each HUD entry is hidden on its own), and many players turn the minimap off and keep
+  // the arrows, so following the minimap is opt-in
   public func IsHudVisible() -> Bool {
-    if !this.followHudVisibility {
-      return true;
-    }
     if GameInstance.GetPhotoModeSystem(this.player.GetGame()).IsPhotoModeActive() {
       return false;
     }
-    // covers vanilla context hiding, Limited HUD (fades the minimap root to 0 opacity), and mods that
-    // hide the whole HUD layer, without depending on any of them
+    if !this.followMinimapVisibility {
+      return true;
+    }
+    // covers the game's minimap setting, vanilla context hiding, Limited HUD (fades the minimap root to
+    // 0 opacity) and HUD toggle mods, without depending on any of them
     return InWorldNavigation.IsWidgetTreeVisible(this.mmcc.GetRootWidget());
   }
 
