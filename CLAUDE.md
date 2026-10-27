@@ -24,9 +24,9 @@ cmake --install build
 
 ## Updating for a game patch
 
-1. `python tools/check_hashes.py` - checks the 2 address hashes against the game's `bin/x64/cyberpunk2077_addresses.json`.
+1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 2 address hashes against the game's `bin/x64/cyberpunk2077_addresses.json`.
 2. Bump `deps/red4ext.sdk` (fork commit that knows the patch) and `deps/cyberpunk_cmake` (requirement floors); do that SDK work in `flight_control` first and reuse the commit.
-3. Build, install, launch, check `red4ext/logs/in_world_navigation.log` for "Attaching UpdateNavPath" and drive a quest route.
+3. Build, then install and launch through the shared `game.py` lock (`CLAUDE.local.md`; other sessions may be testing in the same game install), check `red4ext/logs/in_world_navigation.log` for "Attaching UpdateNavPath" and drive a quest route.
 4. Tag.
 
 State on 2026-10-25: game 2.5 broke the RED4ext ABI (`Callback` buffer 32 to 64, `CBaseFunction` 0xB0 to 0xF0), so 2.31 builds crash on load in `AddRegistrationFunc`. Hashes, the `MappinsContainerController` layout (PathData at +0x218, stride 40) and the redscript were unchanged. Rebuilding on SDK `new-types` 732300b6, cyberpunk_cmake 9d97027 and mod_settings 29f27e4 fixed it, tested in game. red_lib stays on the `jack` fork (2d9bb93); upstream was not needed. Configure with `-DCYBERPUNK_2077_GAME_DIR=...` when the game is not on C:.
