@@ -31,7 +31,7 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   // if (value.resource.path.hash != 0) {
   // RED4ext::CName fc = value.resource.path.hash;
   // value.resource.Resolve();
-  // LoadResRef<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
+  // ResourceAsyncReference_IssueLoadingRequest<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
   //}
 
   if (aOut) {
