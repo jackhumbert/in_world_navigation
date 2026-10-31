@@ -2,7 +2,7 @@
 
 Cyberpunk 2077 mod: renders the minimap's navigation path as holographic arrows in the world. RED4ext C++ plugin + redscript + a Wolvenkit archive, shipped under `red4ext/plugins/in_world_navigation/`. Settings UI comes from Mod Settings.
 
-Sibling repos with the same build/release shape: `../flight_control` (Let There Be Flight; its CLAUDE.md has the full build/update/release detail), `../mod_settings`, `../input_loader`.
+The rules for every mod (languages, native design, layout, build, release, comments, docs, tests) are in `../cp2077_tools/docs/mod_standard.md`; this file has only what is particular to In-World Navigation. Sibling repos: `../let_there_be_flight`, `../mod_settings`, `../input_loader`.
 
 ## Layout
 
@@ -14,18 +14,12 @@ Sibling repos with the same build/release shape: `../flight_control` (Let There 
 
 ## Build
 
-MSVC 2022 + Ninja + CMake 3.24+ (VS dev shell):
-
-```
-cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
-cmake --build build
-cmake --install build
-```
+Standard (section 6): `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja`, then `python ../cp2077_tools/game.py build "<title>"`; install only through `game.py run --install`.
 
 ## Updating for a game patch
 
 1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 2 address hashes against the game's `bin/x64/cyberpunk2077_addresses.json`.
-2. Bump `deps/red4ext.sdk` (fork commit that knows the patch) and `deps/cyberpunk_cmake` (requirement floors); do that SDK work in `flight_control` first and reuse the commit.
+2. Bump `deps/red4ext.sdk` (fork commit that knows the patch) and `deps/cyberpunk_cmake` (requirement floors), as the standard's patch-day steps say.
 3. Build, install, launch and run the smoke test, only through `../cp2077_tools` (the one way to test, see `E:\src\CLAUDE.md`):
 
    ```
@@ -45,11 +39,8 @@ State on 2026-09-13: v0.1.21 (built for 2.30) loads and hooks on game 2.31 uncha
 
 ## Releases
 
-Push a `vX.Y.Z` tag. `.github/workflows/release.yaml` builds, generates the changelog with git-cliff (`cliff.toml`, conventional commits: `feat:`/`fix:` appear, `chore:`/`ci:` skipped), publishes the GitHub release, then uploads to Nexus mod 4583 (file id 2601349) via `Nexus-Mods/upload-action`. Needs the repo secret `NEXUSMODS_API_KEY`; the v3 mod id is resolved from the site id in a prior step. Full-depth checkout is required for the changelog.
-
-Push submodule commits to their own repos before tagging.
+The standard release flow (section 5). Nexus mod 4583, file id 2601349.
 
 ## Conventions
 
-- No em-dashes anywhere.
-- Don't commit `build/`, `game_dir*/`, `compile_commands.json`, or Wolvenkit `.projectFiles` / `custom_refs.txt` churn.
+- Don't commit Wolvenkit `custom_refs.txt` churn (with `.projectFiles`, standard section 9).
