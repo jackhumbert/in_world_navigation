@@ -26,7 +26,17 @@ cmake --install build
 
 1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 2 address hashes against the game's `bin/x64/cyberpunk2077_addresses.json`.
 2. Bump `deps/red4ext.sdk` (fork commit that knows the patch) and `deps/cyberpunk_cmake` (requirement floors); do that SDK work in `flight_control` first and reuse the commit.
-3. Build, then install, launch and test only through `../cp2077_tools` (`game.py run ... --install --launch -- <test>`; the one way to test, see `E:\src\CLAUDE.md`), check `red4ext/logs/in_world_navigation.log` for "Attaching UpdateNavPath" and drive a quest route.
+3. Build, install, launch and run the smoke test, only through `../cp2077_tools` (the one way to test, see `E:\src\CLAUDE.md`):
+
+   ```
+   python ../cp2077_tools/game.py run "<title>" --purpose "in_world_navigation smoke" --install --launch --scripts ../cp2077_tools/mods/in_world_navigation --protect red4ext/plugins/mod_settings/user.ini -- python ../cp2077_tools/mods/in_world_navigation/smoke.py --out <dir>
+   ```
+
+   It checks the log, the instance, setting the display mode through Mod Settings (`--protect` puts Jack's
+   `user.ini` back), and that tracking a quest objective in the save puts arrows along its path. It also
+   checks that untracking clears them, with a screenshot. The newest save is used (or `--save`): it needs an
+   active quest objective with a map pin. `GetQuestArrowCount` / `HasQuestMappin` in `InWorldNavigation.reds`
+   exist for this test: the class is native, so a helper cannot `@addMethod` onto it.
 4. Tag.
 
 State on 2026-10-25: game 2.5 broke the RED4ext ABI (`Callback` buffer 32 to 64, `CBaseFunction` 0xB0 to 0xF0), so 2.31 builds crash on load in `AddRegistrationFunc`. Hashes, the `MappinsContainerController` layout (PathData at +0x218, stride 40) and the redscript were unchanged. Rebuilding on SDK `new-types` 732300b6, cyberpunk_cmake 9d97027 and mod_settings 29f27e4 fixed it, tested in game. red_lib stays on the `jack` fork (2d9bb93); upstream was not needed. Configure with `-DCYBERPUNK_2077_GAME_DIR=...` when the game is not on C:.

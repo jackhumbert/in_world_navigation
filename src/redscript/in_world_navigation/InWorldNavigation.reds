@@ -144,6 +144,18 @@ public native class InWorldNavigation extends IScriptable {
     player.RegisterInputListener(this, n"InWorldNavigation_Toggle");
   }
 
+  // Read-only state for the in-game smoke test (cp2077_tools mods/in_world_navigation): the class is native, so
+  // a test helper cannot @addMethod onto it.
+  // arrows showing along the tracked quest's path: 0 with nothing tracked, when Update stops their effects
+  // (BreakLoop) but keeps them in navPathFXs for reuse
+  public func GetQuestArrowCount() -> Int32 {
+    return IsDefined(this.questMappin) && ArraySize(this.navPathFXs) > 0 ? ArraySize(this.navPathFXs[0]) : 0;
+  }
+
+  public func HasQuestMappin() -> Bool {
+    return IsDefined(this.questMappin);
+  }
+
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
     if Equals(ListenerAction.GetName(action), n"InWorldNavigation_Toggle") && ListenerAction.IsButtonJustPressed(action) {
       this.ToggleEnabled();
