@@ -4,6 +4,19 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-24 Arrow brightness: one effect per level
+
+Decision: "Arrow brightness" picks one of four effects (`world_navigation_rgb[_dim|_bright|_brightest]`),
+whose channel particles have `ColorMultiplier` 7.5, 15, 22.5 and 30; changing it drops the arrows and
+respawns them. The alphas stay as they are. In this material alpha is coverage, not intensity: as it drops
+the arrow's dots thin out, and once they are all drawn more alpha adds nothing. Tried and dropped, in game:
+- Alpha times a brightness factor (0.5 to 2) on multiplier 15: 2 looked hardly brighter, 0.5 only thinner.
+- Channel multiplier 45 with alphas a third as big, for 3 times the headroom: the default arrows turned
+  orange and dim arrows pink, since each channel thins out on its own and the faint ones go first.
+The smoke test checks it by the light arrow-coloured pixels add over a shot with the arrows off (Dim /
+Normal / Brightest 254823 / 765506 / 2125490); a plain pixel count drowned in sunlight moving across the
+scene while game time ran.
+
 ## 2026-11-24 Arrow colour from script, one effect
 
 Decision: the arrow colour is three floats set from script, not one `.effect` / `.particle` pair per

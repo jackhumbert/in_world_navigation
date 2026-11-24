@@ -1,3 +1,12 @@
+// how strongly the arrows glow: each level is its own effect, its channel arrows' colour multiplier 0.5, 1, 1.5
+// and 2 times Normal's (world_navigation_rgb[_dim|_bright|_brightest].effect)
+enum InWorldNavigationBrightness {
+  Dim = 0,
+  Normal = 1,
+  Bright = 2,
+  Brightest = 3
+}
+
 enum InWorldNavigationMode {
   Always = 0,
   Driving = 1,
@@ -69,6 +78,13 @@ public native class InWorldNavigation extends IScriptable {
   let opacity: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow brightness")
+  @runtimeProperty("ModSettings.description", "How strongly the arrows glow: raise it if they wash out in daylight")
+  @runtimeProperty("ModSettings.displayValues", "\"Dim\", \"Normal\", \"Bright\", \"Brightest\"")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let brightness: InWorldNavigationBrightness = InWorldNavigationBrightness.Normal;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Arrow size")
   @runtimeProperty("ModSettings.description", "Scales the arrows from their base on the path")
   @runtimeProperty("ModSettings.step", "0.05")
@@ -137,7 +153,9 @@ public native class InWorldNavigation extends IScriptable {
 
   // one arrow effect for every colour: a red, a green and a blue arrow drawn additively in the same place, each
   // one's alpha read from its own blackboard input ("red", "green", "blue"), so any colour is three floats
-  let navPathResource: FxResource;
+  // one per InWorldNavigationBrightness; spawnedBrightness is the one the arrows were spawned with
+  let navPathResources: array<FxResource>;
+  let spawnedBrightness: InWorldNavigationBrightness;
 
   let distanceToAnimate: Float;
 
@@ -154,7 +172,11 @@ public native class InWorldNavigation extends IScriptable {
     this.player = player;
     this.distanceToAnimate = 50.0;
     
-    this.navPathResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb.effect");
+    ArrayPush(this.navPathResources, Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb_dim.effect"));
+    ArrayPush(this.navPathResources, Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb.effect"));
+    ArrayPush(this.navPathResources, Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb_bright.effect"));
+    ArrayPush(this.navPathResources, Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb_brightest.effect"));
+    this.spawnedBrightness = this.brightness;
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
@@ -250,6 +272,8 @@ public native class InWorldNavigation extends IScriptable {
   // An arrow colour as the three channel arrows' alphas: the sRGB colour in linear light (the material's colour
   // parameter is sRGB), times the material's colour multiplier over the channel arrows' 15 (the blackboard clamps
   // to 0..1, so the brightest colour sets the channels' multiplier; the coloured arrows had 7, white 15).
+  // A higher channel multiplier with smaller alphas does not work: the material thins its dots out as alpha
+  // drops, per channel, so faint channels vanish first and the hue shifts (docs/history.md, 2026-11-24).
   public static func ArrowColor(r: Int32, g: Int32, b: Int32, multiplier: Float) -> Vector4 {
     let scale = multiplier / 15.0;
     return new Vector4(InWorldNavigation.SrgbToLinear(r) * scale, InWorldNavigation.SrgbToLinear(g) * scale,
@@ -335,6 +359,18 @@ public native class InWorldNavigation extends IScriptable {
   }
 
   public func Update(canUpdate: Int32) {
+    if NotEquals(this.spawnedBrightness, this.brightness) {
+      // another effect: drop every arrow so the next update spawns them anew
+      this.spawnedBrightness = this.brightness;
+      for list in this.navPathFXs {
+        for fx in list {
+          fx.BreakLoop();
+          fx.Kill();
+        }
+      }
+      ArrayClear(this.navPathFXs[0]);
+      ArrayClear(this.navPathFXs[1]);
+    }
     if IsDefined(this.mmcc) {
       let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
       if this.enabled && this.IsHudVisible() && !this.IsRideHidden(isMounted) &&
@@ -462,7 +498,7 @@ public native class InWorldNavigation extends IScriptable {
     WorldTransform.SetPosition(wt, p);
     WorldTransform.SetOrientation(wt, q);
     if i >= ArraySize(this.navPathFXs[type]) {
-      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResource, wt));
+      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResources[EnumInt(this.brightness)], wt));
     } else { 
       if IsDefined(this.navPathFXs[type][i]) && this.navPathFXs[type][i].IsValid() && !force {
         this.navPathFXs[type][i].UpdateTransform(wt);
@@ -471,7 +507,7 @@ public native class InWorldNavigation extends IScriptable {
           this.navPathFXs[type][i].BreakLoop();
           this.navPathFXs[type][i].Kill();
         }
-        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResource, wt);
+        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResources[EnumInt(this.brightness)], wt);
       }
     }
     InWorldNavigation.SetArrowColor(this.navPathFXs[type][i], color, MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
