@@ -132,15 +132,21 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     Utils::CreateLogger();
     spdlog::info("Starting up In-World Navigation " MOD_VERSION_STR);
 
+    // Leftovers from old installs. The error_code overloads keep a locked file from throwing out of Load.
+    std::error_code ec;
     auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "in_world_navigation";
-    if (std::filesystem::exists(scriptsFolder)) {
+    if (std::filesystem::exists(scriptsFolder, ec)) {
       spdlog::info("Deleting old scripts folder");
-      std::filesystem::remove_all(scriptsFolder);
+      if (std::filesystem::remove_all(scriptsFolder, ec); ec) {
+        spdlog::warn("Could not delete the old scripts folder: {}", ec.message());
+      }
     }
     auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "in_world_navigation.archive";
-    if (std::filesystem::exists(archive)) {
+    if (std::filesystem::exists(archive, ec)) {
       spdlog::info("Deleting old archive");
-      std::filesystem::remove_all(archive);
+      if (std::filesystem::remove_all(archive, ec); ec) {
+        spdlog::warn("Could not delete the old archive: {}", ec.message());
+      }
     }
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
@@ -158,7 +164,11 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
 
-    spdlog::info("Shutting down");
+    // RED4ext also calls Unload when Load threw, possibly before the logger was set. The build disables
+    // spdlog's default logger, so logging then would use a null logger.
+    if (spdlog::default_logger_raw()) {
+      spdlog::info("Shutting down");
+    }
     ModModuleFactory::GetInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;

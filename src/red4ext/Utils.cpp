@@ -11,16 +11,30 @@ void Utils::CreateLogger()
     auto logsDir = red4extDir / L"logs";
     spdlog::filename_t logFile = (logsDir / L"in_world_navigation.log");
 
-    auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
+    std::vector<spdlog::sink_ptr> sinks = {std::make_shared<spdlog::sinks::stdout_color_sink_mt>()};
 
-    spdlog::sinks_init_list sinks = {console, file};
+    // The log file can be held open by a game process that has not exited yet. Opening it throws, and an
+    // exception out of Main(Load) makes RED4ext unload the plugin at once, so log to the console only.
+    bool fileOpened = true;
+    try
+    {
+        sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true));
+    }
+    catch (const spdlog::spdlog_ex&)
+    {
+        fileOpened = false;
+    }
 
-    auto logger = std::make_shared<spdlog::logger>("", sinks);
+    auto logger = std::make_shared<spdlog::logger>("", sinks.begin(), sinks.end());
     spdlog::set_default_logger(logger);
 
     logger->flush_on(spdlog::level::trace);
     spdlog::set_level(spdlog::level::trace);
+
+    if (!fileOpened)
+    {
+        spdlog::warn("Could not open the log file, logging to the console only");
+    }
 }
 
 std::filesystem::path Utils::GetRootDir()
