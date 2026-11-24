@@ -69,6 +69,36 @@ public native class InWorldNavigation extends IScriptable {
   let opacity: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Custom arrow colour")
+  @runtimeProperty("ModSettings.description", "Off: the arrows take the minimap's colour for where they lead (yellow for quests). On: every arrow uses the colour below")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let useCustomColor: Bool = false;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow colour: red")
+  @runtimeProperty("ModSettings.step", "5")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "255")
+  @runtimeProperty("ModSettings.dependency", "useCustomColor")
+  let customRed: Int32 = 255;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow colour: green")
+  @runtimeProperty("ModSettings.step", "5")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "255")
+  @runtimeProperty("ModSettings.dependency", "useCustomColor")
+  let customGreen: Int32 = 230;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow colour: blue")
+  @runtimeProperty("ModSettings.step", "5")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "255")
+  @runtimeProperty("ModSettings.dependency", "useCustomColor")
+  let customBlue: Int32 = 60;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Vertical offset")
   @runtimeProperty("ModSettings.description", "Meters to raise (or lower) the arrows from the path")
   @runtimeProperty("ModSettings.step", "0.1")
@@ -232,6 +262,9 @@ public native class InWorldNavigation extends IScriptable {
 
   // use the state the game uses to determine the color
   public func GetColorForState(state: CName) -> Vector4 {
+    if this.useCustomColor {
+      return InWorldNavigation.ArrowColor(this.customRed, this.customGreen, this.customBlue, 7.0);
+    }
     switch (state) {
       case n"Quest":
       case n"IncendiaryGrenade":

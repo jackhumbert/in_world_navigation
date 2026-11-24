@@ -11,6 +11,7 @@ Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display m
 * **Toggle arrows key** (default `;`): flips "Show arrows" in-game. Needs [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader); without it the arrows can still be toggled from the settings page.
 * **Hide with the minimap** (default off): hides the arrows whenever the minimap is hidden, by the game's minimap setting or by HUD-hiding mods (Limited HUD, HUD toggles, AMM), without a dependency on any of them. Leave it off to keep the arrows with the minimap turned off. Photo mode always hides the arrows.
 * **Arrow opacity** and **Vertical offset**: scale the arrows' brightness, and raise or lower them off the path (in meters). Both apply live.
+* **Custom arrow colour** (default off): off, the arrows take the minimap's colour for where they lead (yellow for quests, teal for gigs, and so on). On, every arrow uses the red, green and blue values below it (0 to 255). Applies live.
 * **Hide during autodrive**, **Hide as a passenger**, **Hide on the metro** (all default on): no arrows while the car drives itself, while someone else is driving, or on the NCART.
 
 ![preview](preview.jpg)
