@@ -96,12 +96,9 @@ public native class InWorldNavigation extends IScriptable {
   let navPathFXs: array<array<ref<FxInstance>>>;
   let navPathTransforms: array<array<Transform>>;
 
-  let navPathYellowResource: FxResource;
-  let navPathBlueResource: FxResource;
-  let navPathWhiteResource: FxResource;
-  let navPathTealResource: FxResource;
-  let navPathCyanResource: FxResource;
-  let navPathFastTravelMetroResource: FxResource;
+  // one arrow effect for every colour: a red, a green and a blue arrow drawn additively in the same place, each
+  // one's alpha read from its own blackboard input ("red", "green", "blue"), so any colour is three floats
+  let navPathResource: FxResource;
 
   let distanceToAnimate: Float;
 
@@ -118,12 +115,7 @@ public native class InWorldNavigation extends IScriptable {
     this.player = player;
     this.distanceToAnimate = 50.0;
     
-    this.navPathYellowResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_yellow.effect");
-    this.navPathBlueResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_blue.effect");
-    this.navPathWhiteResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_white.effect");
-    this.navPathTealResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_teal.effect");
-    this.navPathCyanResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_cyan.effect");
-    this.navPathFastTravelMetroResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\fast_travel_metro.effect");
+    this.navPathResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb.effect");
 
     let questFx: array<ref<FxInstance>>;
     let poiFx: array<ref<FxInstance>>;
@@ -216,66 +208,88 @@ public native class InWorldNavigation extends IScriptable {
     return false;
   }
 
+  // An arrow colour as the three channel arrows' alphas: the sRGB colour in linear light (the material's colour
+  // parameter is sRGB), times the material's colour multiplier over the channel arrows' 15 (the blackboard clamps
+  // to 0..1, so the brightest colour sets the channels' multiplier; the coloured arrows had 7, white 15).
+  public static func ArrowColor(r: Int32, g: Int32, b: Int32, multiplier: Float) -> Vector4 {
+    let scale = multiplier / 15.0;
+    return new Vector4(InWorldNavigation.SrgbToLinear(r) * scale, InWorldNavigation.SrgbToLinear(g) * scale,
+      InWorldNavigation.SrgbToLinear(b) * scale, 1.0);
+  }
+
+  private static func SrgbToLinear(c: Int32) -> Float {
+    let v = Cast<Float>(c) / 255.0;
+    return v <= 0.04045 ? v / 12.92 : PowF((v + 0.055) / 1.055, 2.4);
+  }
+
+  // the colours of the old per-colour effects (world_navigation_<colour>.particle, before 2026-11-24)
+  public static func Yellow() -> Vector4 { return InWorldNavigation.ArrowColor(255, 230, 62, 7.0); }
+  public static func Teal() -> Vector4 { return InWorldNavigation.ArrowColor(0, 230, 188, 7.0); }
+  public static func Blue() -> Vector4 { return InWorldNavigation.ArrowColor(0, 134, 252, 7.0); }
+  public static func Cyan() -> Vector4 { return InWorldNavigation.ArrowColor(25, 215, 247, 7.0); }
+  public static func FastTravelMetro() -> Vector4 { return InWorldNavigation.ArrowColor(204, 128, 255, 7.0); }
+  public static func White() -> Vector4 { return InWorldNavigation.ArrowColor(255, 254, 254, 15.0); }
+
   // use the state the game uses to determine the color
-  public func GetResourceForState(state: CName) -> FxResource {
+  public func GetColorForState(state: CName) -> Vector4 {
     switch (state) {
       case n"Quest":
       case n"IncendiaryGrenade":
         // ActiveYellow
-        return this.navPathYellowResource; 
+        return InWorldNavigation.Yellow(); 
       case n"QuestUntracked":
         // DarkGold
-        return this.navPathYellowResource; 
+        return InWorldNavigation.Yellow(); 
       case n"QuestComplete":
         // QuestComplete
-        return this.navPathYellowResource; 
+        return InWorldNavigation.Yellow(); 
       case n"Gigs":
         // StreetCred
-        return this.navPathTealResource;
+        return InWorldNavigation.Teal();
       case n"FastTravel":
         // StrongFastTravel
-        return this.navPathBlueResource;
+        return InWorldNavigation.Blue();
       case n"FastTravelMetro":
         // FastTravelMetro
-        return this.navPathFastTravelMetroResource;
+        return InWorldNavigation.FastTravelMetro();
       case n"InteractionDefault":
       case n"EMPGrenade":
       case n"RemoteControlDriving":
         // ActiveBlue
-        return this.navPathCyanResource;
+        return InWorldNavigation.Cyan();
       case n"Story":
         // Blue
-        return this.navPathBlueResource;
+        return InWorldNavigation.Blue();
       case n"Default":
       case n"Impossible":
       case n"Available":
       case n"FragGrenade":
       case n"CuttingGrenade":
         // ActiveRed
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
       case n"Player":
       case n"BiohazardGrenade":
         // ActiveGreen
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
       case n"Vehicle":
       case n"VehicleForPurchase":
       case n"ServicePoint":
         // White
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
       case n"Relic":
         // Relic
-        return this.navPathTealResource;
+        return InWorldNavigation.Teal();
       case n"Shard":
         // Shared
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
       case n"ShardRead":
         // DarkGrey
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
       case n"PlayerTracked":
         // DamageTypeChemical_Critical
-        return this.navPathWhiteResource;
+        return InWorldNavigation.White();
     }
-    return this.navPathWhiteResource;
+    return InWorldNavigation.White();
   }
 
   public func Update(canUpdate: Int32) {
@@ -289,9 +303,9 @@ public native class InWorldNavigation extends IScriptable {
         if IsDefined(this.questMappin) {
           if !Equals(this.currentQuestState, this.questState) {
             this.currentQuestState = this.questState;
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForState(this.currentQuestState), true);
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetColorForState(this.currentQuestState), true);
           } else {
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetResourceForState(this.currentQuestState), false);
+            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetColorForState(this.currentQuestState), false);
           }
         } else {     
           for fx in this.navPathFXs[0] {
@@ -302,9 +316,9 @@ public native class InWorldNavigation extends IScriptable {
         if IsDefined(this.poiMappin) {
           if !Equals(this.currentPoiState, this.poiState) {
             this.currentPoiState = this.poiState;
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForState(this.currentPoiState), true);
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetColorForState(this.currentPoiState), true);
           } else {
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetResourceForState(this.currentPoiState), false);
+            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetColorForState(this.currentPoiState), false);
           }
         } else {
           for fx in this.navPathFXs[1] {
@@ -328,7 +342,7 @@ public native class InWorldNavigation extends IScriptable {
 
   let timer: Float;
 
-  private func UpdateNavPath(type: Int32, points: array<Vector4>, resource: FxResource, force: Bool) -> Void {
+  private func UpdateNavPath(type: Int32, points: array<Vector4>, color: Vector4, force: Bool) -> Void {
     let pointDrawnCount: Int32 = 0;
     let dots: array<Transform>;
     let i = ArraySize(points) - 1;
@@ -388,25 +402,25 @@ public native class InWorldNavigation extends IScriptable {
     while pointDrawnCount < this.maxPoints && i >= 0 {
       let p = this.navPathTransforms[type][i].position;
       let q = this.navPathTransforms[type][i].orientation;
-      this.UpdateFxInstance(type, pointDrawnCount, p, q, resource, force);
+      this.UpdateFxInstance(type, pointDrawnCount, p, q, color, force);
       pointDrawnCount += 1;
       i -= 1;
     }
 
     while pointDrawnCount < this.maxPoints && pointDrawnCount < ArraySize(this.navPathFXs[type]) {   
-      this.navPathFXs[type][pointDrawnCount].SetBlackboardValue(n"alpha", 0.0);
+      InWorldNavigation.SetArrowColor(this.navPathFXs[type][pointDrawnCount], new Vector4(0.0, 0.0, 0.0, 0.0), 0.0);
       this.navPathFXs[type][pointDrawnCount].BreakLoop();
       this.navPathFXs[type][pointDrawnCount].Kill();
       pointDrawnCount += 1;
     }
   }
 
-  private func UpdateFxInstance(type: Int32, i: Int32, p: Vector4, q: Quaternion, resource: FxResource, force: Bool) {
+  private func UpdateFxInstance(type: Int32, i: Int32, p: Vector4, q: Quaternion, color: Vector4, force: Bool) {
     let wt: WorldTransform;
     WorldTransform.SetPosition(wt, p);
     WorldTransform.SetOrientation(wt, q);
     if i >= ArraySize(this.navPathFXs[type]) {
-      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(resource, wt));
+      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResource, wt));
     } else { 
       if IsDefined(this.navPathFXs[type][i]) && this.navPathFXs[type][i].IsValid() && !force {
         this.navPathFXs[type][i].UpdateTransform(wt);
@@ -415,9 +429,15 @@ public native class InWorldNavigation extends IScriptable {
           this.navPathFXs[type][i].BreakLoop();
           this.navPathFXs[type][i].Kill();
         }
-        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(resource, wt);
+        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResource, wt);
       }
     }
-    this.navPathFXs[type][i].SetBlackboardValue(n"alpha", MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
+    InWorldNavigation.SetArrowColor(this.navPathFXs[type][i], color, MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
+  }
+
+  private static func SetArrowColor(fx: ref<FxInstance>, color: Vector4, alpha: Float) {
+    fx.SetBlackboardValue(n"red", color.X * alpha);
+    fx.SetBlackboardValue(n"green", color.Y * alpha);
+    fx.SetBlackboardValue(n"blue", color.Z * alpha);
   }
 }

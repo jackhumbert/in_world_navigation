@@ -4,6 +4,21 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-24 Arrow colour from script, one effect
+
+Decision: the arrow colour is three floats set from script, not one `.effect` / `.particle` pair per
+colour. The six old pairs (yellow, blue, white, teal, cyan, fast travel metro) differed only in the
+`Color` of the particle's local material instance (white also had `ColorMultiplier` 15 where the rest
+had 7). `FxInstance.SetBlackboardValue` takes only floats, and `effectTrackItemParticles` reads only
+`alpha`, `size`, `velocity` and `emissionScale` from the blackboard, so no colour input reaches a
+particle. `world_navigation_rgb.effect` instead draws three channel arrows in the same place
+(`world_navigation_channel_{red,green,blue}.particle`: pure red, green, blue on `arrow.mi`, with
+`AdditiveAlphaBlend` 1 so they add exactly, and `ColorMultiplier` 15), each track's `alpha` bound to its
+own input `red`, `green`, `blue`. Script sends each channel as the colour in linear light times the
+arrow's alpha: the material's `Color` is sRGB, and the blackboard clamps to 0..1, so the colours that had
+multiplier 7 are scaled by 7/15. Checked in game against the old effects, side by side, all five colours
+alike. Cost: three particles per arrow instead of one.
+
 ## 2026-10-31 Hook renamed to the game's own name
 
 Decision: the hook and the direct call are named `<Class>_<Method>` after their SHA-confirmed names
