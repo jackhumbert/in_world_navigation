@@ -69,6 +69,15 @@ public native class InWorldNavigation extends IScriptable {
   let opacity: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Arrow size")
+  @runtimeProperty("ModSettings.description", "Scales the arrows from their base on the path")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.25")
+  @runtimeProperty("ModSettings.max", "2.0")
+  @runtimeProperty("ModSettings.dependency", "enabled")
+  let arrowSize: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
   @runtimeProperty("ModSettings.displayName", "Custom arrow colour")
   @runtimeProperty("ModSettings.description", "Off: the arrows take the minimap's colour for where they lead (yellow for quests). On: every arrow uses the colour below")
   @runtimeProperty("ModSettings.dependency", "enabled")
@@ -466,6 +475,8 @@ public native class InWorldNavigation extends IScriptable {
       }
     }
     InWorldNavigation.SetArrowColor(this.navPathFXs[type][i], color, MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
+    // the effect's size is 2 times its input (the blackboard clamps to 0..1), so half the scale goes in
+    this.navPathFXs[type][i].SetBlackboardValue(n"size", this.arrowSize * 0.5);
   }
 
   private static func SetArrowColor(fx: ref<FxInstance>, color: Vector4, alpha: Float) {
