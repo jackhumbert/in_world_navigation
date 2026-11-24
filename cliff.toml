@@ -30,11 +30,11 @@ conventional_commits = true
 commit_parsers = [
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
-    { message = "^doc", group = "Documentation" },
+    { message = "^doc", group = "Documentation", skip = true },
     { message = "^perf", group = "Performance" },
-    { message = "^refactor", group = "Refactor" },
-    { message = "^style", group = "Styling" },
-    { message = "^test", group = "Testing" },
+    { message = "^refactor", group = "Refactor", skip = true },
+    { message = "^style", group = "Styling", skip = true },
+    { message = "^test", group = "Testing", skip = true },
     { message = "^chore", group = "Miscellaneous", skip = true },
     { message = "^ci", group = "CI", skip = true },
     { body = ".*security", group = "Security" }
