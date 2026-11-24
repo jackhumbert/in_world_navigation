@@ -17,6 +17,10 @@ public native class InWorldNavigation extends IScriptable {
   public static native func GetInstance() -> ref<InWorldNavigation>;
   // true when the widget and every parent up to the HUD layer is visible with non-zero opacity
   public static native func IsWidgetTreeVisible(widget: wref<inkWidget>) -> Bool;
+  // time spent in Update, measured by the UpdateGPSPath hook, for the performance check in the smoke tools:
+  // "calls <n> (quest <q>, poi <p>), total <ms> ms, mean <us> us, max <us> us"
+  public static native func GetUpdateStats() -> String;
+  public static native func ResetUpdateStats() -> Void;
 
   public let mmcc: ref<MinimapContainerController>;
   public let player: ref<GameObject>;
@@ -148,14 +152,40 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.dependency", "enabled")
   let hideOnMetro: Bool = true;
 
-  let navPathFXs: array<array<ref<FxInstance>>>;
-  let navPathTransforms: array<array<Transform>>;
-
   // one arrow effect for every colour: a red, a green and a blue arrow drawn additively in the same place, each
-  // one's alpha read from its own blackboard input ("red", "green", "blue"), so any colour is three floats
-  // one per InWorldNavigationBrightness; spawnedBrightness is the one the arrows were spawned with
+  // one's alpha read from its own blackboard input ("red", "green", "blue"), so any colour is three floats; one
+  // effect per InWorldNavigationBrightness, spawnedBrightness the one the arrows were spawned with
   let navPathResources: array<FxResource>;
   let spawnedBrightness: InWorldNavigationBrightness;
+
+  // Per path: index 0 is the quest's, 1 the POI's (the minimap's GPS target types, the hook's argument).
+  // The route as last laid out, destination first: the end that stays put while V moves, so a new route is laid
+  // out again only from where it starts to differ.
+  let routeRev: array<array<Vector4>>;
+  // the arrows along it, destination first: position on the route (before the vertical offset), orientation, and
+  // the route segment (routeRev[s] to routeRev[s + 1]) each was placed on
+  let dotPos: array<array<Vector4>>;
+  let dotRot: array<array<Quaternion>>;
+  let dotSeg: array<array<Int32>>;
+  // effect slots: arrow k is drawn by slot k % maxPoints, so V passing an arrow touches one slot, not all of them
+  let slotFx: array<array<ref<FxInstance>>>;
+  let slotDot: array<array<Int32>>;
+  let slotPos: array<array<Vector4>>;
+  let slotRot: array<array<Quaternion>>;
+  let slotAlpha: array<array<Float>>;
+  let slotGliding: array<array<Bool>>;
+  let gliding: array<array<Int32>>;
+  // drawn arrows are dots lo to count - 1 (the ones nearest V), as of the last update
+  let drawnLo: array<Int32>;
+  let drawnCount: array<Int32>;
+  let liveArrows: array<Int32>;
+  let pathColor: array<Vector4>;
+  // true: start the path afresh on its next update (first draw, hidden, or a layout setting changed)
+  let pathDirty: array<Bool>;
+  // the settings a path was drawn with, compared on every update (Mod Settings' OnModSettingsChange did not fire
+  // for accepted changes in testing): layout (spacing, max arrows, vertical offset, size) and look (opacity, fade)
+  let pathLayout: array<Vector4>;
+  let pathLook: array<Vector4>;
 
   let distanceToAnimate: Float;
 
@@ -164,9 +194,6 @@ public native class InWorldNavigation extends IScriptable {
 
   let questState: CName;
   let poiState: CName;
-
-  let currentQuestState: CName;
-  let currentPoiState: CName;
 
   public func Setup(player: ref<GameObject>) -> Void {
     this.player = player;
@@ -178,18 +205,36 @@ public native class InWorldNavigation extends IScriptable {
     ArrayPush(this.navPathResources, Cast<FxResource>(r"user\\jackhumbert\\effects\\world_navigation_rgb_brightest.effect"));
     this.spawnedBrightness = this.brightness;
 
-    let questFx: array<ref<FxInstance>>;
-    let poiFx: array<ref<FxInstance>>;
-    ArrayPush(this.navPathFXs, questFx);
-    ArrayPush(this.navPathFXs, poiFx);
-
     this.questState = n"Quest";
     this.poiState = n"Gigs";
 
-    let questTransforms: array<Transform>;
-    let poisTransforms: array<Transform>;
-    ArrayPush(this.navPathTransforms, questTransforms);
-    ArrayPush(this.navPathTransforms, poisTransforms);
+    // Setup runs on every player attach: drop what an earlier one drew
+    if ArraySize(this.slotFx) == 2 {
+      this.ResetPath(0);
+      this.ResetPath(1);
+    }
+    ArrayClear(this.routeRev); ArrayClear(this.dotPos); ArrayClear(this.dotRot); ArrayClear(this.dotSeg);
+    ArrayClear(this.slotFx); ArrayClear(this.slotDot); ArrayClear(this.slotPos); ArrayClear(this.slotRot);
+    ArrayClear(this.slotAlpha); ArrayClear(this.slotGliding); ArrayClear(this.gliding);
+    ArrayClear(this.drawnLo); ArrayClear(this.drawnCount); ArrayClear(this.liveArrows); ArrayClear(this.pathColor);
+    ArrayClear(this.pathDirty); ArrayClear(this.pathLayout); ArrayClear(this.pathLook);
+    let type = 0;
+    while type < 2 {
+      let vectors: array<Vector4>;
+      let rotations: array<Quaternion>;
+      let ints: array<Int32>;
+      let floats: array<Float>;
+      let bools: array<Bool>;
+      let effects: array<ref<FxInstance>>;
+      ArrayPush(this.routeRev, vectors); ArrayPush(this.dotPos, vectors); ArrayPush(this.dotRot, rotations);
+      ArrayPush(this.dotSeg, ints); ArrayPush(this.slotFx, effects); ArrayPush(this.slotDot, ints);
+      ArrayPush(this.slotPos, vectors); ArrayPush(this.slotRot, rotations); ArrayPush(this.slotAlpha, floats);
+      ArrayPush(this.slotGliding, bools); ArrayPush(this.gliding, ints);
+      ArrayPush(this.drawnLo, 0); ArrayPush(this.drawnCount, 0); ArrayPush(this.liveArrows, 0);
+      ArrayPush(this.pathColor, new Vector4(0.0, 0.0, 0.0, 0.0)); ArrayPush(this.pathDirty, true);
+      ArrayPush(this.pathLayout, new Vector4(0.0, 0.0, 0.0, 0.0)); ArrayPush(this.pathLook, new Vector4(0.0, 0.0, 0.0, 0.0));
+      type += 1;
+    }
     ModSettings.RegisterListenerToClass(this);
 
     // Setup runs on every player attach; unregister first so a press only toggles once
@@ -199,10 +244,9 @@ public native class InWorldNavigation extends IScriptable {
 
   // Read-only state for the in-game smoke test (cp2077_tools mods/in_world_navigation): the class is native, so
   // a test helper cannot @addMethod onto it.
-  // arrows showing along the tracked quest's path: 0 with nothing tracked, when Update stops their effects
-  // (BreakLoop) but keeps them in navPathFXs for reuse
+  // arrows showing along the tracked quest's path: 0 with nothing tracked
   public func GetQuestArrowCount() -> Int32 {
-    return IsDefined(this.questMappin) && ArraySize(this.navPathFXs) > 0 ? ArraySize(this.navPathFXs[0]) : 0;
+    return IsDefined(this.questMappin) && ArraySize(this.liveArrows) > 0 ? this.liveArrows[0] : 0;
   }
 
   public func HasQuestMappin() -> Bool {
@@ -358,161 +402,339 @@ public native class InWorldNavigation extends IScriptable {
     return InWorldNavigation.White();
   }
 
-  public func Update(canUpdate: Int32) {
-    if NotEquals(this.spawnedBrightness, this.brightness) {
-      // another effect: drop every arrow so the next update spawns them anew
-      this.spawnedBrightness = this.brightness;
-      for list in this.navPathFXs {
-        for fx in list {
-          fx.BreakLoop();
-          fx.Kill();
-        }
-      }
-      ArrayClear(this.navPathFXs[0]);
-      ArrayClear(this.navPathFXs[1]);
+  // Called by the hook after the minimap updates one GPS path: target 0 is the quest's, 1 the POI's.
+  public func Update(target: Int32) {
+    if !IsDefined(this.mmcc) || ArraySize(this.slotFx) != 2 {
+      return;
     }
-    if IsDefined(this.mmcc) {
-      let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
-      if this.enabled && this.IsHudVisible() && !this.IsRideHidden(isMounted) &&
-        ((isMounted && NotEquals(this.mode, InWorldNavigationMode.Walking)) ||
-         (!isMounted && NotEquals(this.mode, InWorldNavigationMode.Driving))
-        ) { 
-        this.questMappin = this.mmcc.GetQuestMappin();
-        if IsDefined(this.questMappin) {
-          if !Equals(this.currentQuestState, this.questState) {
-            this.currentQuestState = this.questState;
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetColorForState(this.currentQuestState), true);
-          } else {
-            this.UpdateNavPath(0, this.mmcc.questPoints, this.GetColorForState(this.currentQuestState), false);
-          }
-        } else {     
-          for fx in this.navPathFXs[0] {
-            fx.BreakLoop();
-          }
-        }
-        this.poiMappin = this.mmcc.GetPOIMappin();
-        if IsDefined(this.poiMappin) {
-          if !Equals(this.currentPoiState, this.poiState) {
-            this.currentPoiState = this.poiState;
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetColorForState(this.currentPoiState), true);
-          } else {
-            this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetColorForState(this.currentPoiState), false);
-          }
-        } else {
-          for fx in this.navPathFXs[1] {
-            fx.BreakLoop();
-          }
-        }
+    let type = target == 0 ? 0 : 1;
+    if NotEquals(this.spawnedBrightness, this.brightness) {
+      // another effect: drop every arrow so they spawn anew
+      this.spawnedBrightness = this.brightness;
+      this.ResetPath(0);
+      this.ResetPath(1);
+    }
+    let isMounted = VehicleComponent.IsMountedToVehicle(this.player.GetGame(), this.player);
+    if !this.enabled || !this.IsHudVisible() || this.IsRideHidden(isMounted) ||
+      (isMounted && Equals(this.mode, InWorldNavigationMode.Walking)) ||
+      (!isMounted && Equals(this.mode, InWorldNavigationMode.Driving)) {
+      this.ResetPath(type);
+      return;
+    }
+    if type == 0 {
+      this.questMappin = this.mmcc.GetQuestMappin();
+      if IsDefined(this.questMappin) {
+        this.UpdateNavPath(0, this.mmcc.questPoints, this.GetColorForState(this.questState));
       } else {
-        this.Stop();
+        this.ResetPath(0);
+      }
+    } else {
+      this.poiMappin = this.mmcc.GetPOIMappin();
+      if IsDefined(this.poiMappin) {
+        this.UpdateNavPath(1, this.mmcc.poiPoints, this.GetColorForState(this.poiState));
+      } else {
+        this.ResetPath(1);
       }
     }
   }
 
   public func Stop() {
-    for fx in this.navPathFXs[0] {
-      fx.BreakLoop();
-    }
-    for fx in this.navPathFXs[1] {
-      fx.BreakLoop();
+    if ArraySize(this.slotFx) == 2 {
+      this.ResetPath(0);
+      this.ResetPath(1);
     }
   }
 
-  let timer: Float;
-
-  private func UpdateNavPath(type: Int32, points: array<Vector4>, color: Vector4, force: Bool) -> Void {
-    let pointDrawnCount: Int32 = 0;
-    let dots: array<Transform>;
-    let i = ArraySize(points) - 1;
-    let lastDrawnPoint: Vector4 = points[i];
-
-    // let firstDistance = Vector4.Distance( points[i],points[i-1]);
-    // let lastDrawnPoint: Vector4 = Vector4.Interpolate(points[i], points[i-1], this.timer / firstDistance);
-    // this.timer += 0.01;
-    // if this.timer > this.spacing {
-    //   this.timer -= this.spacing;
-    //   ArrayRemove(this.navPathFXs[type], this.navPathFXs[type][0]);
-    // }
-
-    while i > 0 {
-      let tweenPointDistance = Vector4.Distance(points[i-1], lastDrawnPoint);
-      if i == 1 {
-        tweenPointDistance += this.spacing;
+  // Removes a path's arrows and forgets its layout; the next update starts it afresh.
+  private func ResetPath(type: Int32) {
+    if this.pathDirty[type] && ArraySize(this.slotFx[type]) == 0 && ArraySize(this.routeRev[type]) == 0 {
+      return;
+    }
+    for fx in this.slotFx[type] {
+      if IsDefined(fx) {
+        fx.BreakLoop();
+        fx.Kill();
       }
-      if tweenPointDistance >= this.spacing {
-        // let rounded = Cast<Float>(RoundF(tweenPointDistance / this.spacing));
-        // let tweenPointSpacing = this.spacing + (tweenPointDistance - rounded * this.spacing) / rounded;
-        let lastDrawnPointInLastGroup = lastDrawnPoint;
-        let distance = this.spacing;
-        while distance <= tweenPointDistance {
-          let ratio: Float = distance / tweenPointDistance;
-          let position = Vector4.Interpolate(lastDrawnPointInLastGroup, points[i-1], ratio);
-          let orientation = Quaternion.BuildFromDirectionVector(lastDrawnPoint - position);
-          distance += this.spacing;
-          // offset only the drawn transform so the orientation still follows the path itself
-          ArrayPush(dots, Transform.Create(new Vector4(position.X, position.Y, position.Z + this.verticalOffset, position.W), orientation));
-          lastDrawnPoint = position;
+    }
+    ArrayClear(this.slotFx[type]);
+    ArrayClear(this.slotDot[type]);
+    ArrayClear(this.slotPos[type]);
+    ArrayClear(this.slotRot[type]);
+    ArrayClear(this.slotAlpha[type]);
+    ArrayClear(this.slotGliding[type]);
+    ArrayClear(this.gliding[type]);
+    ArrayClear(this.routeRev[type]);
+    ArrayClear(this.dotPos[type]);
+    ArrayClear(this.dotRot[type]);
+    ArrayClear(this.dotSeg[type]);
+    this.drawnLo[type] = 0;
+    this.drawnCount[type] = 0;
+    this.liveArrows[type] = 0;
+    this.pathDirty[type] = true;
+  }
+
+  private func UpdateNavPath(type: Int32, points: array<Vector4>, color: Vector4) -> Void {
+    let n = ArraySize(points);
+    if n < 2 {
+      this.ResetPath(type);
+      return;
+    }
+    let layout = new Vector4(this.spacing, Cast<Float>(this.maxPoints), this.verticalOffset, this.arrowSize);
+    let look = new Vector4(this.opacity, this.distanceToFade, 0.0, 0.0);
+    let applied = this.pathLayout[type];
+    if applied.X != layout.X || applied.Y != layout.Y || applied.Z != layout.Z {
+      this.pathDirty[type] = true;
+    }
+    let resize = applied.W != layout.W;
+    let relook = Vector4.DistanceSquared(look, this.pathLook[type]) > 0.0;
+    this.pathLayout[type] = layout;
+    this.pathLook[type] = look;
+    if this.pathDirty[type] {
+      this.ResetPath(type);
+      this.pathDirty[type] = false;
+      let slots = this.maxPoints;
+      ArrayResize(this.slotFx[type], slots);
+      ArrayResize(this.slotDot[type], slots);
+      ArrayResize(this.slotPos[type], slots);
+      ArrayResize(this.slotRot[type], slots);
+      ArrayResize(this.slotAlpha[type], slots);
+      ArrayResize(this.slotGliding[type], slots);
+      let slot = 0;
+      while slot < slots {
+        this.slotDot[type][slot] = -1;
+        this.slotAlpha[type][slot] = -1.0;
+        this.slotGliding[type][slot] = false;
+        slot += 1;
+      }
+      this.pathColor[type] = color;
+    }
+    let recolor = relook || Vector4.DistanceSquared(color, this.pathColor[type]) > 0.0;
+    this.pathColor[type] = color;
+    if resize {
+      for fx in this.slotFx[type] {
+        if IsDefined(fx) {
+          fx.SetBlackboardValue(n"size", this.arrowSize * 0.5);
         }
       }
-      i -= 1;
     }
 
-    i = 0;
-    while i < ArraySize(dots) {
-      if ArraySize(this.navPathTransforms[type]) <= i {
-        ArrayPush(this.navPathTransforms[type], dots[i]);
-      } else {
-        if Vector4.Distance(this.navPathTransforms[type][i].position, dots[i].position) < this.distanceToAnimate {
-          this.navPathTransforms[type][i].position = Vector4.Interpolate(this.navPathTransforms[type][i].position, dots[i].position, 0.1);
-          this.navPathTransforms[type][i].orientation = Quaternion.Slerp(this.navPathTransforms[type][i].orientation, dots[i].orientation, 0.1);
+    // where the new route starts to differ, counted from the destination (1 cm tolerance: the start jitters). A
+    // route changes from V's end (V moving, a re-plan up to where it rejoins), so check both ends first, then walk
+    // back from V's end to where the old and new routes agree.
+    let old = ArraySize(this.routeRev[type]);
+    let same = old;
+    if old != n || Vector4.DistanceSquared(this.routeRev[type][0], points[n - 1]) >= 0.0001
+      || Vector4.DistanceSquared(this.routeRev[type][n - 1], points[0]) >= 0.0001 {
+      same = Min(old, n);
+      while same > 0 && Vector4.DistanceSquared(this.routeRev[type][same - 1], points[n - same]) >= 0.0001 {
+        same -= 1;
+      }
+    }
+    let routeChanged = same < n || old != n;
+    if !routeChanged && ArraySize(this.gliding[type]) == 0 && !recolor {
+      return;
+    }
+
+    let keep = ArraySize(this.dotPos[type]);
+    if routeChanged {
+      ArrayResize(this.routeRev[type], n);
+      let k = same;
+      while k < n {
+        this.routeRev[type][k] = points[n - 1 - k];
+        k += 1;
+      }
+      // lay out again from the first segment that touches a changed point; the last segment (V's end) is laid
+      // out with an extra spacing, so it is always redone when the route's length changed
+      let firstSeg = same - 1;
+      if old != n {
+        firstSeg = Min(firstSeg, Min(old, n) - 2);
+      }
+      firstSeg = Max(firstSeg, 0);
+      while keep > 0 && this.dotSeg[type][keep - 1] >= firstSeg {
+        keep -= 1;
+      }
+      ArrayResize(this.dotPos[type], keep);
+      ArrayResize(this.dotRot[type], keep);
+      ArrayResize(this.dotSeg[type], keep);
+      let lastDrawn = keep > 0 ? this.dotPos[type][keep - 1] : this.routeRev[type][0];
+      let seg = firstSeg;
+      while seg < n - 1 {
+        let next = this.routeRev[type][seg + 1];
+        let tween = Vector4.Distance(next, lastDrawn);
+        if seg == n - 2 {
+          tween += this.spacing;
+        }
+        if tween >= this.spacing {
+          let groupStart = lastDrawn;
+          let distance = this.spacing;
+          while distance <= tween {
+            let position = Vector4.Interpolate(groupStart, next, distance / tween);
+            ArrayPush(this.dotRot[type], Quaternion.BuildFromDirectionVector(lastDrawn - position));
+            ArrayPush(this.dotPos[type], position);
+            ArrayPush(this.dotSeg[type], seg);
+            lastDrawn = position;
+            distance += this.spacing;
+          }
+        }
+        seg += 1;
+      }
+    }
+
+    let count = ArraySize(this.dotPos[type]);
+    let slots = ArraySize(this.slotFx[type]);
+    let lo = count - Min(count, slots);
+    let v = this.player.GetWorldPosition();
+
+    // slots whose arrow is no longer drawn
+    if lo != this.drawnLo[type] || count != this.drawnCount[type] {
+      let slot = 0;
+      while slot < slots {
+        let dot = this.slotDot[type][slot];
+        if dot >= 0 && (dot < lo || dot >= count) {
+          this.HideSlot(type, slot);
+        }
+        slot += 1;
+      }
+    }
+
+    if recolor {
+      let slot = 0;
+      while slot < slots {
+        this.slotAlpha[type][slot] = -1.0;
+        slot += 1;
+      }
+    }
+
+    // arrows newly drawn: the re-laid ones near V, and the ones the window reached at its far end
+    let k = Max(lo, Min(keep, count));
+    while k < count {
+      this.PlaceDot(type, k, v);
+      k += 1;
+    }
+    k = lo;
+    while k < Min(this.drawnLo[type], Min(keep, count)) {
+      this.PlaceDot(type, k, v);
+      k += 1;
+    }
+    this.drawnLo[type] = lo;
+    this.drawnCount[type] = count;
+
+    // arrows still gliding to a re-planned route
+    if ArraySize(this.gliding[type]) > 0 {
+      let still: array<Int32>;
+      for slot in this.gliding[type] {
+        let dot = this.slotDot[type][slot];
+        if dot < 0 {
+          this.slotGliding[type][slot] = false;
         } else {
-          this.navPathTransforms[type][i].position = dots[i].position;
-          this.navPathTransforms[type][i].orientation = dots[i].orientation;
+          let target = this.Lifted(this.dotPos[type][dot]);
+          if Vector4.DistanceSquared(this.slotPos[type][slot], target) < 0.0001 {
+            this.slotPos[type][slot] = target;
+            this.slotRot[type][slot] = this.dotRot[type][dot];
+            this.slotGliding[type][slot] = false;
+          } else {
+            this.slotPos[type][slot] = Vector4.Interpolate(this.slotPos[type][slot], target, 0.1);
+            this.slotRot[type][slot] = Quaternion.Slerp(this.slotRot[type][slot], this.dotRot[type][dot], 0.1);
+            ArrayPush(still, slot);
+          }
+          this.MoveSlot(type, slot);
         }
       }
-      i += 1;
+      this.gliding[type] = still;
     }
 
-    ArrayResize(this.navPathTransforms[type], ArraySize(dots));
-
-    i = ArraySize(dots) - 1;
-
-    while pointDrawnCount < this.maxPoints && i >= 0 {
-      let p = this.navPathTransforms[type][i].position;
-      let q = this.navPathTransforms[type][i].orientation;
-      this.UpdateFxInstance(type, pointDrawnCount, p, q, color, force);
-      pointDrawnCount += 1;
-      i -= 1;
-    }
-
-    while pointDrawnCount < this.maxPoints && pointDrawnCount < ArraySize(this.navPathFXs[type]) {   
-      InWorldNavigation.SetArrowColor(this.navPathFXs[type][pointDrawnCount], new Vector4(0.0, 0.0, 0.0, 0.0), 0.0);
-      this.navPathFXs[type][pointDrawnCount].BreakLoop();
-      this.navPathFXs[type][pointDrawnCount].Kill();
-      pointDrawnCount += 1;
+    // colours: every arrow after a colour change, else the ones near V, where the distance fade changes
+    if recolor {
+      k = lo;
+      while k < count {
+        this.WriteAlpha(type, k % slots, v);
+        k += 1;
+      }
+    } else {
+      let reach = this.distanceToFade + 2.0 * this.spacing;
+      k = count - 1;
+      while k >= lo {
+        let slot = k % slots;
+        if Vector4.Distance2D(v, this.slotPos[type][slot]) > reach {
+          break;
+        }
+        this.WriteAlpha(type, slot, v);
+        k -= 1;
+      }
     }
   }
 
-  private func UpdateFxInstance(type: Int32, i: Int32, p: Vector4, q: Quaternion, color: Vector4, force: Bool) {
-    let wt: WorldTransform;
-    WorldTransform.SetPosition(wt, p);
-    WorldTransform.SetOrientation(wt, q);
-    if i >= ArraySize(this.navPathFXs[type]) {
-      ArrayPush(this.navPathFXs[type], GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResources[EnumInt(this.brightness)], wt));
-    } else { 
-      if IsDefined(this.navPathFXs[type][i]) && this.navPathFXs[type][i].IsValid() && !force {
-        this.navPathFXs[type][i].UpdateTransform(wt);
-      } else {
-        if IsDefined(this.navPathFXs[type][i]) {
-          this.navPathFXs[type][i].BreakLoop();
-          this.navPathFXs[type][i].Kill();
-        }
-        this.navPathFXs[type][i] = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResources[EnumInt(this.brightness)], wt);
+  // the drawn position of a point on the route
+  private func Lifted(p: Vector4) -> Vector4 {
+    return new Vector4(p.X, p.Y, p.Z + this.verticalOffset, p.W);
+  }
+
+  // Draws dot k in its slot: a dot new to the slot jumps there, the same dot moved by a re-planned route glides.
+  private func PlaceDot(type: Int32, k: Int32, v: Vector4) {
+    let slot = k % ArraySize(this.slotFx[type]);
+    let target = this.Lifted(this.dotPos[type][k]);
+    let fx = this.slotFx[type][slot];
+    let alive = IsDefined(fx) && fx.IsValid();
+    if this.slotDot[type][slot] == k && alive
+      && Vector4.Distance(this.slotPos[type][slot], target) < this.distanceToAnimate {
+      if !this.slotGliding[type][slot] {
+        this.slotGliding[type][slot] = true;
+        ArrayPush(this.gliding[type], slot);
       }
+      return;
     }
-    InWorldNavigation.SetArrowColor(this.navPathFXs[type][i], color, MinF(Vector4.Distance2D(this.player.GetWorldPosition(), p) / this.distanceToFade, 1.0) * this.opacity);
-    // the effect's size is 2 times its input (the blackboard clamps to 0..1), so half the scale goes in
-    this.navPathFXs[type][i].SetBlackboardValue(n"size", this.arrowSize * 0.5);
+    this.slotDot[type][slot] = k;
+    this.slotPos[type][slot] = target;
+    this.slotRot[type][slot] = this.dotRot[type][k];
+    this.slotAlpha[type][slot] = -1.0;
+    if alive {
+      this.MoveSlot(type, slot);
+    } else {
+      let wt: WorldTransform;
+      WorldTransform.SetPosition(wt, target);
+      WorldTransform.SetOrientation(wt, this.dotRot[type][k]);
+      if !IsDefined(fx) {
+        this.liveArrows[type] += 1;
+      }
+      fx = GameInstance.GetFxSystem(this.player.GetGame()).SpawnEffect(this.navPathResources[EnumInt(this.brightness)], wt);
+      this.slotFx[type][slot] = fx;
+      // the effect's size is 2 times its input (the blackboard clamps to 0..1), so half the scale goes in
+      fx.SetBlackboardValue(n"size", this.arrowSize * 0.5);
+    }
+    this.WriteAlpha(type, slot, v);
+  }
+
+  private func MoveSlot(type: Int32, slot: Int32) {
+    let wt: WorldTransform;
+    WorldTransform.SetPosition(wt, this.slotPos[type][slot]);
+    WorldTransform.SetOrientation(wt, this.slotRot[type][slot]);
+    this.slotFx[type][slot].UpdateTransform(wt);
+  }
+
+  private func HideSlot(type: Int32, slot: Int32) {
+    let fx = this.slotFx[type][slot];
+    if IsDefined(fx) {
+      fx.BreakLoop();
+      fx.Kill();
+      this.slotFx[type][slot] = null;
+      this.liveArrows[type] -= 1;
+    }
+    this.slotDot[type][slot] = -1;
+    this.slotAlpha[type][slot] = -1.0;
+  }
+
+  // Sends a slot's colour times its alpha (opacity and the fade near V) when it changed.
+  private func WriteAlpha(type: Int32, slot: Int32, v: Vector4) {
+    let fx = this.slotFx[type][slot];
+    if !IsDefined(fx) {
+      return;
+    }
+    let fade = this.distanceToFade > 0.0 ? MinF(Vector4.Distance2D(v, this.slotPos[type][slot]) / this.distanceToFade, 1.0) : 1.0;
+    let alpha = fade * this.opacity;
+    if AbsF(alpha - this.slotAlpha[type][slot]) > 0.002 {
+      InWorldNavigation.SetArrowColor(fx, this.pathColor[type], alpha);
+      this.slotAlpha[type][slot] = alpha;
+    }
   }
 
   private static func SetArrowColor(fx: ref<FxInstance>, color: Vector4, alpha: Float) {

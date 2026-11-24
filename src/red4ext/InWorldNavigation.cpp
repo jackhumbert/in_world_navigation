@@ -1,5 +1,8 @@
 #include "InWorldNavigation.hpp"
 
+#include <algorithm>
+#include <format>
+
 RED4ext::Handle<InWorldNavigation> handle;
 
 RED4ext::Handle<InWorldNavigation> InWorldNavigation::GetInstance() {
@@ -11,6 +14,37 @@ RED4ext::Handle<InWorldNavigation> InWorldNavigation::GetInstance() {
   }
 
   return handle;
+}
+
+namespace {
+struct UpdateStats {
+  int64_t calls = 0;
+  int64_t byTarget[2] = {0, 0};
+  int64_t totalMicroseconds = 0;
+  int64_t maxMicroseconds = 0;
+};
+UpdateStats stats;
+} // namespace
+
+void InWorldNavigation::RecordUpdate(uint8_t targetType, int64_t microseconds) {
+  stats.calls++;
+  if (targetType < 2) {
+    stats.byTarget[targetType]++;
+  }
+  stats.totalMicroseconds += microseconds;
+  stats.maxMicroseconds = std::max(stats.maxMicroseconds, microseconds);
+}
+
+RED4ext::CString InWorldNavigation::GetUpdateStats() {
+  auto mean = stats.calls ? stats.totalMicroseconds / stats.calls : 0;
+  auto text = std::format("calls {} (quest {}, poi {}), total {:.1f} ms, mean {} us, max {} us", stats.calls,
+                          stats.byTarget[0], stats.byTarget[1], stats.totalMicroseconds / 1000.0, mean,
+                          stats.maxMicroseconds);
+  return RED4ext::CString(text.c_str());
+}
+
+void InWorldNavigation::ResetUpdateStats() {
+  stats = UpdateStats{};
 }
 
 bool InWorldNavigation::IsWidgetTreeVisible(RED4ext::WeakHandle<RED4ext::ink::Widget> widget) {

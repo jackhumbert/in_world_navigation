@@ -4,6 +4,33 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-24 Arrows update incrementally
+
+Prompted by a RedProfiler report on #48 (UpdateFxInstance at 177 calls per frame, UpdateNavPath 470 us a call).
+Measured with the hook's own timer (`GetUpdateStats`, `cp2077_tools/mods/in_world_navigation/perf.py`) on the
+standard save, a 396-point route, game unfocused:
+
+| | Update mean / max per call, before | after |
+|---|---|---|
+| standing | 1.07 ms / 1.7 ms | 32 us / 0.14 ms |
+| driving | 1.25 ms / 4.5 ms | 66 us / 1.4 ms |
+
+Findings and what changed:
+- The minimap calls `UpdateGPSPath` once per GPS target type every frame (0 the quest, found by which call
+  changed `questPoints`; 1 the POI), and each call redrew both paths. Now each call updates its own path.
+- The hook handed script the one-byte target type as an Int32 read from its address, three bytes of garbage
+  included; script ignored it until now. It is widened first.
+- `points[0]` is V and the last point the destination; arrow spacing is anchored at the destination, so V moving
+  only changes the route near V. The route is kept destination first and laid out again only from the first
+  changed segment; a route that has not moved (1 cm: the start jitters below that) costs two point compares.
+- Each arrow keeps its slot (`k % max arrows`): before, V passing an arrow handed every effect the next arrow's
+  place. Effects get a transform only when their arrow is new to the slot or gliding to a re-planned route, and
+  colour only when it changed: after a colour or setting change, or within the fade distance of V.
+- Settings are compared on every update: `OnModSettingsChange` did not fire for accepted changes in testing.
+- Multilayer textures or a colour input were looked for first: no particle module or effect track in the game's
+  4,382 effects takes a colour from an effect input (only `CParticleModificatorAlphaOverEffect` reads one, and
+  material-parameter tracks take floats onto an attached entity's meshes), so the three channel arrows stay.
+
 ## 2026-11-24 Arrow brightness: one effect per level
 
 Decision: "Arrow brightness" picks one of four effects (`world_navigation_rgb[_dim|_bright|_brightest]`),
