@@ -1,5 +1,6 @@
 #include "FlightRoute.hpp"
 
+#include "InWorldNavigation.hpp"
 #include "MapFit.hpp"
 
 #include <RED4ext/RTTISystem.hpp>
@@ -51,6 +52,16 @@ const Guidance *FindGuidance() {
   return guidance.hasRoute && guidance.getRoute ? &guidance : nullptr;
 }
 
+// the "Follow flight route" setting (InWorldNavigation.followFlightRoute); on when the field is missing
+bool Following() {
+  static auto *prop = [] {
+    auto *cls = RED4ext::CRTTISystem::Get()->GetClass("InWorldNavigation");
+    return cls ? cls->GetProperty("followFlightRoute") : nullptr;
+  }();
+  auto instance = InWorldNavigation::GetInstance();
+  return !prop || !instance || *prop->GetValuePtr<bool>(instance.GetPtr());
+}
+
 float Distance2DSquared(const RED4ext::Vector4 &aA, const RED4ext::Vector4 &aB) {
   const float dx = aA.X - aB.X, dy = aA.Y - aB.Y;
   return dx * dx + dy * dy;
@@ -65,7 +76,7 @@ int32_t Refresh(RED4ext::game::ui::MinimapContainerController *aMinimap) {
   bool has = false;
   RED4ext::DynArray<RED4ext::Vector4> route;
   // the status stays from the path that was redrawn until there is no route: the other path's update comes between
-  if (!guidance || !RED4ext::ExecuteFunction(nullptr, guidance->hasRoute, &has) || !has ||
+  if (!guidance || !Following() || !RED4ext::ExecuteFunction(nullptr, guidance->hasRoute, &has) || !has ||
       !RED4ext::ExecuteFunction(nullptr, guidance->getRoute, &route) || route.size < 2) {
     status = "none";
     return target;

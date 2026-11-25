@@ -160,6 +160,12 @@ public native class InWorldNavigation extends IScriptable {
   @runtimeProperty("ModSettings.dependency", "enabled")
   let hideOnMetro: Bool = true;
 
+  // read by FlightRoute.cpp: off, LTBF's route is never taken
+  @runtimeProperty("ModSettings.mod", "In-World Navigation")
+  @runtimeProperty("ModSettings.displayName", "Follow flight route")
+  @runtimeProperty("ModSettings.description", "With Let There Be Flight 0.4.6 or later: while you fly, the arrows and the minimap's GPS line follow its flight route instead of the road route")
+  let followFlightRoute: Bool = true;
+
   // one arrow effect for every colour: a red, a green and a blue arrow drawn additively in the same place, each
   // one's alpha read from its own blackboard input ("red", "green", "blue"), so any colour is three floats; one
   // effect per InWorldNavigationBrightness, spawnedBrightness the one the arrows were spawned with

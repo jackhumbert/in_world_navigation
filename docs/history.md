@@ -20,6 +20,8 @@ when neither has one), and the other GPS path is hidden: both lead by road.
   (-412.3, 522.7) -> vertex (831.6, -656.1), so the vertices are absolute widget positions, not relative to V. In
   game the line has one vertex per point and the fit is exact (error 0.000, scale 1.591 widget units per metre,
   mirrored), and the rewritten vertices show with nothing else marking the widget dirty.
+- A Mod Setting, "Follow flight route" (default on), turns it off: `FlightRoute.cpp` reads the field before taking
+  LTBF's route, so off is the same as LTBF not installed (11/11 in game with it switched off and on while flying).
 - Offline: `tests/map_fit_tests.cpp`, IWN's first unit tests (5), run by CI.
 - In game: `cp2077_tools/mods/in_world_navigation/flight_check.py`, ManualSave-191 with a quest objective tracked, 9/9:
   flight on gave the quest path the flight route (260 arrows climbing over the overpass ahead), the minimap's line

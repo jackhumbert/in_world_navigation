@@ -3,7 +3,7 @@
 // Let There Be Flight's route, when it is installed: while the player flies with something tracked, LTBF publishes
 // the route it plans to the destination (its native class FlightGuidance), and the arrows and the minimap's GPS line
 // follow that in place of the road route. LTBF is looked up through RTTI each frame, so nothing here needs it to be
-// built or installed: without it there is never a flight route.
+// built or installed: without it, or with the "Follow flight route" setting off, there is never a flight route.
 
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>

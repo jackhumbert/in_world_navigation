@@ -14,11 +14,12 @@ Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display m
 * **Arrow brightness** (default Normal): Dim, Normal, Bright or Brightest, for how strongly the arrows glow. Raise it if they wash out in daylight.
 * **Arrow size** (default 1): scales the arrows from 0.25 to 2 times. Applies live.
 * **Custom arrow colour** (default off): off, the arrows take the minimap's colour for where they lead (yellow for quests, teal for gigs, and so on). On, every arrow uses the red, green and blue values below it (0 to 255). Applies live.
+* **Follow flight route** (default on): with Let There Be Flight, the arrows and the minimap follow its flight route while you fly (below). Off, they keep to the road route.
 * **Hide during autodrive**, **Hide as a passenger**, **Hide on the metro** (all default on): no arrows while the car drives itself, while someone else is driving, or on the NCART.
 
 ## With Let There Be Flight
 
-With [Let There Be Flight](https://github.com/jackhumbert/let_there_be_flight) 0.4.6 or later installed, the arrows and the minimap's GPS line follow its flight route while you fly, in place of the road route: the route its Autopilot flies when engaged, or the one it plans for flying by hand. The other GPS path, which still leads by road, is hidden while flying. When flight goes off, the road route comes back. Without Let There Be Flight nothing changes.
+With [Let There Be Flight](https://github.com/jackhumbert/let_there_be_flight) 0.4.6 or later installed, the arrows and the minimap's GPS line follow its flight route while you fly, in place of the road route: the route its Autopilot flies when engaged, or the one it plans for flying by hand. The other GPS path, which still leads by road, is hidden while flying. When flight goes off, the road route comes back. Turn **Follow flight route** off to keep the road route while flying. Without Let There Be Flight nothing changes.
 
 ![preview](preview.jpg)
 
