@@ -41,6 +41,21 @@ target_link_libraries(${MOD_SLUG}.dll
     ArchiveXL
     RedLib
 )
+# Unit tests for the parts of the plugin that need no game (tests/): ctest --test-dir build, or run
+# build/in_world_navigation_tests.exe. They build the plugin's pure sources only, so the test exe needs no game or SDK.
+option(IN_WORLD_NAVIGATION_TESTS "Build the unit tests" ON)
+if(IN_WORLD_NAVIGATION_TESTS)
+  enable_testing()
+  add_executable(in_world_navigation_tests
+    tests/main.cpp
+    tests/map_fit_tests.cpp
+    src/red4ext/MapFit.cpp
+  )
+  target_include_directories(in_world_navigation_tests PRIVATE src/red4ext)
+  target_compile_features(in_world_navigation_tests PRIVATE cxx_std_20)
+  add_test(NAME in_world_navigation_tests COMMAND in_world_navigation_tests)
+endif()
+
 configure_redscript(src/redscript)
 # picked up by Input Loader at runtime (see RegisterInputs in Main.cpp)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)

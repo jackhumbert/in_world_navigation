@@ -16,6 +16,10 @@ Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display m
 * **Custom arrow colour** (default off): off, the arrows take the minimap's colour for where they lead (yellow for quests, teal for gigs, and so on). On, every arrow uses the red, green and blue values below it (0 to 255). Applies live.
 * **Hide during autodrive**, **Hide as a passenger**, **Hide on the metro** (all default on): no arrows while the car drives itself, while someone else is driving, or on the NCART.
 
+## With Let There Be Flight
+
+With [Let There Be Flight](https://github.com/jackhumbert/let_there_be_flight) installed, the arrows and the minimap's GPS line follow its flight route while you fly, in place of the road route: the route its Autopilot flies when engaged, or the one it plans for flying by hand. The other GPS path, which still leads by road, is hidden while flying. When flight goes off, the road route comes back. Without Let There Be Flight nothing changes.
+
 ![preview](preview.jpg)
 
 ## Installation

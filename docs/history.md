@@ -4,6 +4,29 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-24 Following Let There Be Flight's route while flying
+
+Decision: with LTBF installed, while the player flies with something tracked, the arrows and the minimap's GPS line
+follow LTBF's flight route (its `FlightGuidance`, LTBF `docs/design/guidance.md`) instead of the road route. LTBF plans
+and owns the route; IWN only reads it. `FlightRoute.cpp` finds `FlightGuidance` through RTTI each frame, so IWN needs
+nothing of LTBF to build or run. The route stands in for the GPS path whose destination is nearest its end (the quest's
+when neither has one), and the other GPS path is hidden: both lead by road.
+- Arrows: the route goes through the same `UpdateNavPath` as the GPS points. LTBF gives it V's end first, as the
+  minimap's points are, so the incremental layout keeps working (only V's end moves).
+- Minimap: the hooked `UpdateGPSPath` writes `questMappinPoints` itself (the probe of the earlier entry), so the points
+  cannot be swapped in before it. After it, the line's vertices are rewritten along the route, with the world-to-widget
+  mapping fitted that frame to the game's own points and vertices (`MapFit`: rotation, uniform scale, offset, mirrored
+  or not; a straight route keeps the last choice). A probe with one point (on the loading screen) gave world
+  (-412.3, 522.7) -> vertex (831.6, -656.1), so the vertices are absolute widget positions, not relative to V. In
+  game the line has one vertex per point and the fit is exact (error 0.000, scale 1.591 widget units per metre,
+  mirrored), and the rewritten vertices show with nothing else marking the widget dirty.
+- Offline: `tests/map_fit_tests.cpp`, IWN's first unit tests (5), run by CI.
+- In game: `cp2077_tools/mods/in_world_navigation/flight_check.py`, ManualSave-191 with a quest objective tracked, 9/9:
+  flight on gave the quest path the flight route (260 arrows climbing over the overpass ahead), the minimap's line
+  drawn along its 634 points, and flight off put the road route back. A llama-server holding 7 of the GPU's 8 GB made
+  earlier runs crawl (a few fps, 4-minute loads, 3 of 4 runs); the passing runs loaded in under 2 minutes with it still
+  there, so it slows the game at times rather than always.
+
 ## 2026-11-24 Arrows update incrementally
 
 Prompted by a RedProfiler report on #48 (UpdateFxInstance at 177 calls per frame, UpdateNavPath 470 us a call).

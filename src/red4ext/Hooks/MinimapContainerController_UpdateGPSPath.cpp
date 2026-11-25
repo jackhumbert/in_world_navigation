@@ -3,6 +3,8 @@
 #include <RED4ext/Scripting/Natives/Generated/game/ui/MinimapContainerController.hpp>
 #include "CyberpunkMod.hpp"
 #include "InWorldNavigation.hpp"
+#include <RED4ext/Scripting/Natives/Generated/ink/LinePatternWidget.hpp>
+#include "FlightRoute.hpp"
 
 // void game::ui::MinimapContainerController::UpdateGPSPath(ink::IWidgetController::UpdateContext const &, game::gps::ETargetType, ink::LinePatternWidgetReference const &)
 REGISTER_HOOK_HASH(void, 3770693656, MinimapContainerController_UpdateGPSPath, 
@@ -15,6 +17,20 @@ REGISTER_HOOK_HASH(void, 3770693656, MinimapContainerController_UpdateGPSPath,
 
   auto rtti = RED4ext::CRTTISystem::Get();
   if (mmcc->GetType() == rtti->GetClass("gameuiMinimapContainerController")) {
+    // flying with Let There Be Flight: the GPS line it stands in for is drawn along its route, the other one (by
+    // road) is emptied
+    const int32_t flight = FlightRoute::Refresh(mmcc);
+    if (flight >= 0 && widgetRef) {
+      auto widget = widgetRef->widget.Lock();
+      if (widget && widget->GetType() == rtti->GetClass("inkLinePatternWidget")) {
+        auto *line = reinterpret_cast<RED4ext::ink::LinePatternWidget *>(widget.GetPtr());
+        if (flight == targetType) {
+          FlightRoute::Redraw(line, targetType == 0 ? mmcc->questMappinPoints : mmcc->poiMappinPoints);
+        } else {
+          line->vertexList.Clear();
+        }
+      }
+    }
     auto fnp = InWorldNavigation::GetInstance();
     // widen first: an Int32 read straight from the one-byte argument takes three bytes of stack garbage with it
     int32_t target = targetType;

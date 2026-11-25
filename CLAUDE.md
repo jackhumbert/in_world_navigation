@@ -6,8 +6,9 @@ The rules for every mod (languages, native design, layout, build, release, comme
 
 ## Layout
 
-- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/MinimapContainerController_UpdateGPSPath.cpp` = the one hooked game function (by RED4ext address hash, named `<Class>_<Method>` after it); `LoadResRef.hpp` = one hashed direct call. `docs/history.md` = decisions and findings. `IO/` = file helpers.
+- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/MinimapContainerController_UpdateGPSPath.cpp` = the one hooked game function (by RED4ext address hash, named `<Class>_<Method>` after it); `LoadResRef.hpp` = one hashed direct call. `FlightRoute.*` = Let There Be Flight's flight route (found through RTTI, optional), the minimap line redrawn along it with `MapFit.*` (pure, tested). `docs/history.md` = decisions and findings. `IO/` = file helpers.
 - `src/redscript/in_world_navigation/` - arrows, colors, settings page; compiled against `deps/mod_settings/redscript` (see `.redscript-ide`).
+- `tests/` - offline unit tests (`in_world_navigation_tests`, run by ctest and CI).
 - `resources/` - Wolvenkit project; the built `resources/packed/archive/pc/mod/in_world_navigation.archive` is committed and only copied by CMake. `mappin_colors.json` at the root is reference data.
 - `deps/` - submodules: `red4ext.sdk` (jackhumbert fork, `new-types`), `cyberpunk_cmake`, `red_lib` (fork, `jack`), `mod_settings` (for its redscript API), `archive_xl` (headers), `spdlog`, `detours`.
 - `game_dir/`, `game_dir_debug/` build outputs zipped for release. `requirements.md` regenerated at configure.

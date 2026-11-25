@@ -21,6 +21,14 @@ public native class InWorldNavigation extends IScriptable {
   // "calls <n> (quest <q>, poi <p>), total <ms> ms, mean <us> us, max <us> us"
   public static native func GetUpdateStats() -> String;
   public static native func ResetUpdateStats() -> Void;
+  // Let There Be Flight's route while the player flies with it (FlightRoute.hpp): the GPS path it stands in for (0 the
+  // quest's, 1 the POI's), -1 when there is none (not flying, nothing tracked, or LTBF not installed)
+  public static native func GetFlightTarget() -> Int32;
+  // its world points, V's end first as the minimap's are; empty when GetFlightTarget is -1
+  public static native func GetFlightRoute() -> array<Vector4>;
+  // what the minimap's last flight redraw did: "drawn <n> (...)", "vertices <v> for <p> points", "poor fit (...)" or
+  // "none"; read-only, for the in-game check
+  public static native func GetFlightMinimapStatus() -> String;
 
   public let mmcc: ref<MinimapContainerController>;
   public let player: ref<GameObject>;
@@ -419,6 +427,25 @@ public native class InWorldNavigation extends IScriptable {
       (isMounted && Equals(this.mode, InWorldNavigationMode.Walking)) ||
       (!isMounted && Equals(this.mode, InWorldNavigationMode.Driving)) {
       this.ResetPath(type);
+      return;
+    }
+    // flying with Let There Be Flight's route: the GPS path it stands in for follows it, and the other one, which
+    // leads by road, hides
+    let flight = InWorldNavigation.GetFlightTarget();
+    if flight >= 0 {
+      if type != flight {
+        this.ResetPath(type);
+        return;
+      }
+      let state: CName;
+      if type == 0 {
+        this.questMappin = this.mmcc.GetQuestMappin();
+        state = this.questState;
+      } else {
+        this.poiMappin = this.mmcc.GetPOIMappin();
+        state = this.poiState;
+      }
+      this.UpdateNavPath(type, InWorldNavigation.GetFlightRoute(), this.GetColorForState(state));
       return;
     }
     if type == 0 {

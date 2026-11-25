@@ -1,4 +1,5 @@
 #include "InWorldNavigation.hpp"
+#include "FlightRoute.hpp"
 
 #include <algorithm>
 #include <format>
@@ -65,3 +66,11 @@ bool InWorldNavigation::IsWidgetTreeVisible(RED4ext::WeakHandle<RED4ext::ink::Wi
   }
   return true;
 }
+
+int32_t InWorldNavigation::GetFlightTarget() { return FlightRoute::Target(); }
+
+RED4ext::DynArray<RED4ext::Vector4> InWorldNavigation::GetFlightRoute() {
+  return FlightRoute::Target() >= 0 ? FlightRoute::Points() : RED4ext::DynArray<RED4ext::Vector4>{};
+}
+
+RED4ext::CString InWorldNavigation::GetFlightMinimapStatus() { return FlightRoute::RedrawStatus(); }
