@@ -18,7 +18,7 @@ Everything lives in the "Mod Settings" menu (not "Mods"): show arrows, display m
 
 ## With Let There Be Flight
 
-With [Let There Be Flight](https://github.com/jackhumbert/let_there_be_flight) installed, the arrows and the minimap's GPS line follow its flight route while you fly, in place of the road route: the route its Autopilot flies when engaged, or the one it plans for flying by hand. The other GPS path, which still leads by road, is hidden while flying. When flight goes off, the road route comes back. Without Let There Be Flight nothing changes.
+With [Let There Be Flight](https://github.com/jackhumbert/let_there_be_flight) 0.4.6 or later installed, the arrows and the minimap's GPS line follow its flight route while you fly, in place of the road route: the route its Autopilot flies when engaged, or the one it plans for flying by hand. The other GPS path, which still leads by road, is hidden while flying. When flight goes off, the road route comes back. Without Let There Be Flight nothing changes.
 
 ![preview](preview.jpg)
 
